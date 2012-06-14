@@ -1,0 +1,225 @@
+<html>
+<head>
+	<title>Wikistalker - Wikipedia Article Structure Visualization</title>
+	
+	<meta name='description' content='Wikistalker - Wikipedia Article Structure Visualization'/>
+	<meta name='keywords' content='wikistalker, wiki stalker, wikipedia stalker, mapping wikipedia, cybercartography, wikipedia visualization, category structure visualization, link relevance visualization, hiedegger,hyperlink ,internet,map,mapped wiki,spaciality ,wikipedia,tower of babel,visualization,processing.org, processingjs, cyberspace'/>
+	<link rel="canonical" href="http://sepans.com/wikistalker" />
+	
+	<script type="text/javascript" src="js/jquery-1.4.4.js"></script>
+	<script type="text/javascript" src="js/processing-1.0.0.js"></script>
+	<script type="text/javascript" src="js/init.js"></script>
+	<script type="text/javascript" src="js/wikify.js"></script>
+	<script type="text/javascript" src="/js/utils.js"></script>
+	<script type="text/javascript" src="js/wiki2html.js"></script>
+	<script type="text/javascript" src="js/raphael-min.js"></script>
+
+	<!--<script type="application/processing" src="js/framework.pde"></script>-->
+	<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+	
+	<style type="text/css">
+		body{ font-family: arial,sans-serif;; font-size: 11px; margin: 30px;}
+		#text_image_canvas { position: absolute; top: 30; left: 270px;}
+		.slider { width: 200px; margin: 5px 0 }
+		
+		#params { padding: 20px 0 0 350px;}
+		#canvas_span {position: absolute;}
+		.top {z-index: 100; position: fixed; border: 1px solid #9FBFA7; background-color: #F5FFFB; padding: 10px;}
+		#article {border: 1px solid #666; height: 25px; width: 170px; padding: 3px; margin: 5px 0;}
+		.radio {vertical-align: middle; }
+		.btn { border: 1px solid black; padding: 5px 3px 2px 3px; cursor: pointer; background-color: #DDD;}
+		.btn:hover {background-color: #CCC;}
+		#tooltip {z-index: 100; position: absolute; width: 200px; background-color: #FFF; max-height: 300px; overflow: hidden; 
+			/*border: 1px solid #9FBFA7;*/ padding: 5px;}
+		#tooltip img {display: block;  border: 1px solid black;margin: 5px auto;}
+		#center {z-index: 100; position: absolute; top: 400; left: 480;}
+		.top_nav {z-index: 100; position: absolute; top: 380; left: 480; width: 200px;}
+		#loading {z-index: 100; position: absolute; top: 420; left: 570; width: 200px; display: none;}
+		#define-menu img {margin: 20px 80px; z-index: 90;}
+		a {color: #666;text-decoration: none;}
+		.right {float: right}
+		.power {position: absolute; top: 1000px; left: 500px;font-size: 12px; float: right; }
+		#wiki_content { position: absolute; z-index: 250; width: 600px; top: 100; left: 270px;  background-color: #F5F5F5; padding: 10px; display: none; border: 1px solid #9FBFA7;}
+		#top_nav {position: fixed; top: 30px; left: 270px; z-index: 300; background-color: #F2FFFB; border: 1px solid #9FBFA7; width: 100%; opacity: .8;
+padding: 10px;}
+		#top_nav a {color: #000; margin-right: 15px; padding: 0 1px;}
+		#wiki_text  { max-height: 700px; overflow: auto;}
+		#wiki_text a {color: #000; }
+		
+		#history_canvas {z-index:250;display:none; position: absolute; top:100; left: 270;}
+		#define-menu a { color: #000;}
+		.top h2 {margin:0; color: #000; float: left; width: 100%;}
+		#help {  position: fixed; top: 220px; left: 300px; border: 1px solid #9FBFA7; z-index: 200;
+		width: 600px; background-color: #fff; padding: 10px; font-size: 12px;}
+		#help b { color: #000; background-color: #CCC; padding: 2px; font-weight: normal;}
+		#heip a { text-decoration: underline; color: #000; }
+		#help h2 { }
+		.disabling {position: absolute; top: 0; left: 0; width:100%; height: 100%; z-index: 1000; display:none; background-color: #FFF; opacity: 0.5; }
+		#tip {position: fixed; top: 80px; left: 270px; padding: 5px; z-index: 500; font-size: 10px; 
+			color: #444; border: 1px solid #444; width: 200px; display: none; background: #FFF; opacity: .8;}
+		#tip .message {color: #00BBBB;}
+	</style>
+
+</head>
+<body>
+
+	<div class="top">
+		<div class="disabling" id="top-disabler" style="display:none"></div>
+		<h2>Wikistalker Image Text</h2>
+		<div style="color: red; margin-top: 6px;">
+			<!--<span style="padding-left: 10px;">Firefox Only!</span>-->
+		</div>
+		<label for="title">Title: </label><br/><input id="article" type="text" size="30" value="Jorge Luis Borges"/> <span class="btn" onclick="changeArticle($('#article').val())">Go!</span><br/>
+
+	</div>
+	
+
+	
+	<span class="power">By <a href="http://sepans.com" target="_new">Sepand</a> Powered by <a href="http://wdm.cs.waikato.ac.nz:8080/" target="_new">Wikipedia Miner</a></span>
+
+<script type="text/javascript">
+
+	var articleId ;
+	var article_title = "Jorge Luis Borges"; 
+	function getWikiArticle(pageId)
+	{
+		$("#wiki_content").show();
+	   var wiki_api = '/proxy.php?proxy_url='+'http://en.wikipedia.org/w/api.php?action=query%26prop=revisions%26rvprop=content%26format=xml%26pageids='+pageId;
+	  // var wiki_xml = loadXML(wiki_api,true);
+	  	$.ajax({
+			type: "GET",
+			url: wiki_api,
+			dataType: "xml",
+			success: function(wiki_xml) 
+			{
+				//////console.log('xml '+wiki_xml);
+				var content = $(wiki_xml).find('rev').text();
+				//////console.log(content.wiki2html());
+				var htmlOutput = content.wiki2html();
+				var regex = /\{\{([^}]+)\}\}/g;
+				//console.log( htmlOutput.replace(regex, ''));
+
+
+				htmlOutput = htmlOutput.replace(regex, '');
+				htmlOutput = htmlOutput.replace(/\|/g,'* ');
+
+				$("#wiki_text").html(htmlOutput);
+				$('#article_header').text($('#article').val());
+
+
+			}
+		})	
+	}
+</script>
+	
+<script type="application/processing">  
+String inputText = "Jorge Francisco Isidoro Luis Borges Acevedo (24 August 1899 – 14 June 1986), known as Jorge Luis Borges (Spanish pronunciation: [xorxe lwis ßorxes]), was an Argentine writer, essayist, poet and translator born in Buenos Aires. In 1914 his family moved to Switzerland where he attended school, receiving his baccalauréat from the Collège de Genève in 1918. The family travelled widely in Europe, including stays in Spain. On his return to Argentina in 1921, Borges began publishing his poems and essays in surrealist literary journals. He also worked as a librarian and public lecturer. In 1955 he was appointed director of the National Public Library (Biblioteca Nacional) and professor of Literature at the University of Buenos Aires. In 1961 he came to international attention when he received the first International Publishers Prize, the Prix Formentor. In 1971 he won the Jerusalem Prize. His work was translated and published widely in the United States and in Europe. Borges himself was fluent in several languages. Borges had dedicated his final work, Los Conjurados (The Conspirators), to the city of Geneva, Switzerland, and it was there, in 1986, that he chose to die. His work embraces the character of unreality in all literature. His most famous books, Ficciones (1944) and The Aleph (1949), are compilations of short stories interconnected by common themes such as dreams, labyrinths, libraries, animals, fictional writers, religion and God. His works have contributed to the genre of science fiction as well as the genre of magic realism, a genre that reacted against the realism/naturalism of the nineteenth century. In fact, critic Angel Flores, the first to use the term, set the beginning of this movement with Borgess Historia universal de la infamia (A Universal History of Infamy) (1935). Scholars also have suggested that Borgess progressive blindness helped him to create innovative literary symbols through imagination. His late poems dialogue with such cultural figures as Spinoza, Camões, and Virgil.His international fame was consolidated in the 1960s, aided by the Latin American Boom and the success of Gabriel García Márquezs Cien Años de Soledad (One Hundred Years of Solitude). Writer and essayist J. M. Coetzee said of him: He, more than anyone, renovated the language of fiction and thus opened the way to a remarkable generation of Spanish American novelists.";
+float fontSizeMax = 12;
+float fontSizeMin = 2;
+float spacing = 10; // line height
+float kerning = 0.5; // between letters
+
+boolean fontSizeStatic = false;
+boolean blackAndWhite = false;
+boolean keepDrawing = true;
+
+PFont font;
+PImage img;
+int time = 0;
+
+void setup() {
+  size(533,769);
+  smooth(); 
+  
+  font = createFont("Times",10);
+  
+  img = loadImage("borges.jpg");
+  //println(img.width+" x "+img.height);
+}
+
+void draw() {
+  
+  if(!keepDrawing)
+	noLoop();
+  if(img.width>0) 
+	keepDrawing = false;  // image has been loaded completly, no need to loop in draw anymore
+  background(255);
+  textAlign(LEFT);
+  //textAlign(LEFT,CENTER); //// also nice!
+
+  float x = 0, y = 10;
+  int counter = 0;
+
+  while (y < height) {
+    // translate position (display) to position (image)
+    int imgX = (int) map(x, 0,width, 0,img.width);
+    int imgY = (int) map(y, 0,height, 0,img.height);
+    // get current color
+    //filter(GRAY);
+    //filter(POSTERIZE, 6);
+    //loadPixels();
+    color c = img.pixels[imgY*img.width+imgX];
+    int greyscale = round(red(c)*0.222 + green(c)*0.707 + blue(c)*0.071);
+
+    pushMatrix();
+    translate(x, y);
+
+    if (fontSizeStatic) {
+      textFont(font, fontSizeMax);
+      if (blackAndWhite) fill(greyscale);
+      else fill(c);
+    } 
+    else {
+      // greyscale to fontsize
+      float fontSize = map(greyscale, 0,255, fontSizeMax,fontSizeMin);
+      fontSize = max(fontSize, 1);
+      textFont(font, fontSize);
+      if (blackAndWhite) fill(0);
+      else fill(c);
+    } 
+
+    char letter = inputText.charAt(counter);
+    text(letter, 0, 0);
+    float letterWidth = textWidth(letter) + kerning;
+    // for the next letter ... x + letter width
+    x = x + letterWidth; // update x-coordinate
+    popMatrix();
+
+    // linebreaks
+    if (x+letterWidth >= width) {
+      x = 0;
+      y = y + spacing; // add line height
+    }
+
+    counter++;
+    if (counter > inputText.length()-1) counter = 0;
+  }
+  //time++;
+  //println(time);
+ /* if(time>2)  // after 30 seconds don't draw anymore
+  {
+	println("stop drawing");
+	keepDrawing = false;
+  }*/
+  
+}
+
+
+void keyReleased() {
+ 
+ 
+}
+
+void keyPressed() {
+ 
+}
+
+</script>
+<span id="text_image_canvas">  
+<canvas > </canvas>
+</span>
+
+
+</body>
+</html>

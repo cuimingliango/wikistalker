@@ -1,0 +1,1044 @@
+<html>
+<head>
+	<title>Wikistalker - Wikipedia Article Structure Visualization</title>
+	
+	<meta name='description' content='Wikistalker - Wikipedia Article Structure Visualization'/>
+	<meta name='keywords' content='wikistalker, wiki stalker, wikipedia stalker, mapping wikipedia, cybercartography, wikipedia visualization, category structure visualization, link relevance visualization, hiedegger,hyperlink ,internet,map,mapped wiki,spaciality ,wikipedia,tower of babel,visualization,processing.org, processingjs, cyberspace'/>
+	<link rel="canonical" href="http://sepans.com/wikistalker" />
+	
+	<script type="text/javascript" src="js/jquery-1.4.4.js"></script>
+	<script type="text/javascript" src="js/processing-1.0.0.js"></script>
+	<script type="text/javascript" src="js/wikify.js"></script>
+	<script type="text/javascript" src="/js/utils.js"></script>
+	<script type="text/javascript" src="js/wiki2html.js"></script>
+	<script type="text/javascript" src="js/raphael-min.js"></script>
+
+	<!--<script type="application/processing" src="js/framework.pde"></script>-->
+	<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+	
+	<style type="text/css">
+		body{ font-family: arial,sans-serif;; font-size: 11px; margin: 30px;}
+		.slider { width: 200px; margin: 5px 0 }
+		#params { padding: 20px 0 0 350px;}
+		#canvas_span {position: absolute;}
+		.top {z-index: 100; position: fixed; border: 1px solid #9FBFA7; background-color: #F5FFFB; padding: 10px;}
+		#article {border: 1px solid #666; height: 25px; width: 170px; padding: 3px; margin: 5px 0;}
+		.radio {vertical-align: middle; }
+		.btn { border: 1px solid black; padding: 5px 3px 2px 3px; cursor: pointer; background-color: #DDD;}
+		.btn:hover {background-color: #CCC;}
+		#tooltip {z-index: 100; position: absolute; width: 200px; background-color: #FFF; max-height: 300px; overflow: hidden; 
+			/*border: 1px solid #9FBFA7;*/ padding: 5px;}
+		#tooltip img {display: block;  border: 1px solid black;margin: 5px auto;}
+		#center {z-index: 100; position: absolute; top: 400; left: 480;}
+		.top_nav {z-index: 100; position: absolute; top: 380; left: 480; width: 200px;}
+		#loading {z-index: 100; position: absolute; top: 420; left: 570; width: 200px; display: none;}
+		#define-menu img {margin: 20px 80px; z-index: 90;}
+		a {color: #666;text-decoration: none;}
+		.right {float: right}
+		.power {position: absolute; top: 1000px; left: 500px;font-size: 12px; float: right; }
+		#wiki_content { position: absolute; z-index: 250; width: 600px; top: 100; left: 270px;  background-color: #F5F5F5; padding: 10px; display: none; border: 1px solid #9FBFA7;}
+		#top_nav {position: fixed; top: 30px; left: 270px; z-index: 300; background-color: #F2FFFB; border: 1px solid #9FBFA7; width: 100%; opacity: .8;
+padding: 10px;}
+		#top_nav a {color: #000; margin-right: 15px; padding: 0 1px;}
+		#wiki_text  { max-height: 700px; overflow: auto;}
+		#wiki_text a {color: #000; }
+		
+		#history_canvas {z-index:250;display:none; position: absolute; top:100; left: 270;}
+		#define-menu a { color: #000;}
+		.top h2 {margin:0; color: #000; float: left;}
+		#help {  position: fixed; top: 220px; left: 300px; border: 1px solid #9FBFA7; z-index: 200;
+		width: 600px; background-color: #fff; padding: 10px; font-size: 12px;}
+		#help b { color: #000; background-color: #CCC; padding: 2px; font-weight: normal;}
+		#heip a { text-decoration: underline; color: #000; }
+		#help h2 { }
+		.disabling {position: absolute; top: 0; left: 0; width:100%; height: 100%; z-index: 1000; display:none; background-color: #FFF; opacity: 0.5; }
+		#tip {position: fixed; top: 80px; left: 270px; padding: 5px; z-index: 500; font-size: 10px; 
+			color: #444; border: 1px solid #444; width: 200px; display: none; background: #FFF; opacity: .8;}
+		#tip .message {color: #00BBBB;}
+	</style>
+
+</head>
+<body>
+	<div id="top_nav">
+		<a href="#" id="linkViewLink" onclick="linkView();return false;" alt="Browse thtough entries">Navigation View</a>
+		<a href="#" id="articleViewLink" onclick="articleView();">Article View</a>
+		<a href="#" id="categoryViewLink" onclick="categoryView();">Category View</a>
+		<a href="#" id="historyViewLink" onclick="historyView();">History View</a>
+		<a href="#" onclick="switchColors();">Switch Colors</a>
+		<a href="#" onclick="$('#help').show();return false;">About</a>
+		<a href="http://sepans.com/sp/works/wikistalker" target="_new" >More Info</a>
+		<span style="margin-left: 40px;">If text is not readable use SVG fonts. This may slow down rendering. <a href="#" class="toggle-font" style="text-decoration: underline;" onclick="toggleBrowseFont();return false;">SVG Font!</a> </span>
+		<!--<a href="#" onclick="$('#canvas1').width(600);$('#canvas1').height(500);getWikiArticle(articleId);return false; ">Side By Side</a>-->
+	</div>
+	<div class="top">
+		<div class="disabling" id="top-disabler" style="display:none"></div>
+		<h2>Wikistalker</h2>
+		<div style="color: red; margin-top: 6px;">
+			<span style="padding-left: 10px;">Firefox Only!</span>
+		</div>
+		<label for="title">Complete Wikipedia Title: </label><br/><input id="article" type="text" size="30" value="Tower of Babel"/> <span class="btn" onclick="changeArticle($('#article').val())">Go!</span><br/>
+		Minimum Link Relevance: <span id="rel-val" >50%</span> <div id="rel-slider" class="slider"></div>
+		<div>Sort By: 
+				<label for="relatedness">Relatedness </label><input type="radio" name="sort" id="relatedness" class="radio" onclick="sortMethod('relatedness');"/>
+				<label for="title">Title </label><input type="radio" name="sort" id="title" class="radio" onclick="showTip(getTipMessage('nav'));;sortMethod('title');" checked="true"/>
+			<br/><a href="" id="setting_link">Link to this setting</a>
+		</div>
+	</div>
+	<div id="tip">
+		Tip: <span class="message">Click on 'Navigation View' to enable controls and navigate</span>
+		<a style="float:right; border: 1px solid #666; padding: 2px;" alt="close" href="#" onclick="$('#tip').hide();">X</a>
+	</div>
+	<div id="tooltip"></div>
+	<div id="center"></div>
+	<div id="define-menu" class="top_nav" style="display:none">
+	
+		<a href="#" onclick="changeArticleById(hover);return false;">Go to Entry</a>  <a href="#" class="right" onclick="lock=false;showTooltip(articleId, $('#center'),null);return false;">Back to browsing</a>
+	</div>
+	<div id="loading"><img src="/images/loading.gif" alt="loading..."/></div>
+	<input type="hidden" id="rel-cache" value="0.5"/>
+	<input type="hidden" id="sort-cache" value="title"/>
+	<span id="canvas_span"><canvas id="canvas1" width="1100" height="1000"></canvas></span>
+	
+	<div id="history_canvas">
+			<a class="right" href="#" onclick="$('#history_canvas').hide();grayOut(false);linkView();return false;">close</a>
+
+	</div>
+	
+	<div id="wiki_content">
+		<a class="right" href="#" onclick="$('#wiki_content').hide();grayOut(false);linkView();return false;">close</a>
+		<h2 id="article_header"></h2>
+		<div id="wiki_text">
+			<img src="/images/loading.gif"/>
+		</div>
+	</div>
+	<div id="help">
+		<a href="#" style="float: right" onclick="$('#help').hide();">close this!</a>
+		<h2>About Wikistalker</h2>
+		<p><a title="Try Wikistalker" href="../../wikistalker" target="_blank">Wikistalker</a>, inspired by &#8216;<a href="http://www.visualcomplexity.com/vc/project_details.cfm?index=7&amp;id=7&amp;domain" target="_blank">Web Stalker</a>&#8216;, is a way of understanding a concept by only seeing the  visualization of the meta-structure of its Wikipedia article.</p>
+<p>In this visualization, a &#8216;sun&#8217; in generated for each article. Each ray  represents an  <b>out-going link</b>. The length of each link shows the <b>semantic relevance</b>  between those two linked articles based on &#8216;<a href="http://wdm.cs.waikato.ac.nz:8080/" target="_blank">Wikipedia Miner</a>&#8216; measures.</p>
+
+<p>In the middle, in the <b>category view</b> tab, Wikistalker illustrates how  links are related to the main entry based on how many categories they  have in common. The category view mesh shows which links are  ontologically related versus rays that show semantic relevance.</p>
+<p>In <b>Navigation View</b> tab a short description appears in the middle and you can navigate in Wikistalker by clicking on links.</p>
+<p>This project is implemented in <b>HTML5</b> using <a href="http://processingjs.org" target="_new">processingjs</a> and raphaeljs.</p>
+		<p>You can filter links by their relatedness using the <b>sliding bar</b> and sort them <b>alphabetically</b> or by <b>relevance</b>. </p>
+		<p><b>Circles</b> on the end of the links are for articles that are mutually linked.</p>
+	</div>
+	
+	<span class="power">By <a href="http://sepans.com" target="_new">Sepand</a> Powered by <a href="http://wdm.cs.waikato.ac.nz:8080/" target="_new">Wikipedia Miner</a></span>
+	
+	<script type="text/javascript">
+	
+	function getTipMessage(type) {
+		var message;
+		if(type == 'nav')
+		{
+			message = navTipMsgs[navTipMsgIndex];
+			//(navTipMsgIndex++)%navTipMsgs.length;
+			navTipMsgIndex++;
+		}
+		else if(type == 'cat')
+		{
+			message = catTipMsgs[catTipMsgIndex];
+			//(catTipMsgIndex++)%catTipMsgIndex.length;
+			catTipMsgIndex++;
+		}
+		return message;
+	}
+	function unHighlightTopNavLinks() {
+	  $('#top_nav a').each(
+		function(index,element) {
+			$(element).css('border','0px');
+		});
+	 }
+	 
+	function linkView()
+	{
+		unHighlightTopNavLinks();
+		enableControls();
+		grayOut(false);
+		cancelAjaxCalls();
+		showTip(getTipMessage('nav'));
+		$('#wiki_content').hide();
+		$('#history_canvas').hide();
+		complex=false;
+		changed=true;
+		lock=false;
+		showTooltip(articleId, $('#center'),null);
+		setTimeout(function() {$('#linkViewLink').css('border','1px solid black')},100);
+		return false;
+	}
+	
+	function articleView() {
+		unHighlightTopNavLinks();
+		grayOut(true,{bgcolor :'#FFF',opacity: 80,zindex: 100});
+		getWikiArticle(articleId);
+		$('#history_canvas').hide();
+		setTimeout(function() {$('#articleViewLink').css('border','1px solid black')},100);
+		return false;
+	}
+	
+	function categoryView() {
+		unHighlightTopNavLinks();
+		complex=true;
+		showTip(getTipMessage('cat'));
+		buildComplexDS();
+		setTimeout(function() {$('#categoryViewLink').css('border','1px solid black')},100);
+		return false;
+	}
+	
+	function historyView() {
+		unHighlightTopNavLinks();
+		grayOut(true,{bgcolor :'#FFF',opacity: 80,zindex: 100});
+		$('#history_canvas').show();
+		$('#wiki_content').hide();drawHistory();
+		setTimeout(function() {$('#historyViewLink').css('border','1px solid black')},100);
+		return false;
+	}
+
+
+	Object.prototype.keys = function ()
+{
+  var keys = [];
+  for(i in this) if (this.hasOwnProperty(i))
+  {
+    keys.push(i);
+  }
+  return keys;
+}
+
+
+
+	var BY_TERM = '/proxy.php?proxy_url='+'http://wikipedia-miner.cms.waikato.ac.nz/services/exploreArticle?outLinks=true%26parentCategories=true%26linkRelatedness=true%26title=';
+	var BY_ID = '/proxy.php?proxy_url='+'http://wikipedia-miner.cms.waikato.ac.nz/services/exploreArticle?outLinks=true%26parentCategories=true%26linkRelatedness=true%26id=';
+	
+	var fileLoaded = 0;
+	var xsl;
+	var xml;
+	var transformed;
+	var changed = true;
+	var xmlChanged = true;
+	var hover = -1;
+	var prevFrameHover = -1;
+	var defined = false;
+	var RX;
+	var linkCount;
+	var entries = new Array();
+	var rectWidth ;
+	var infoFont;
+	var smallFont;
+	
+	var articleId;
+	var lock = false;
+	var tracking = [];
+	var trackIndex = 0;
+	
+	var complex = false;     
+	var complexDone = false;
+	var complexDS = null;
+	var mainCategories = {};
+	var topCategories = {};
+	var tmpCategories = {};
+	
+	var catTipMsgs = ['Click on \'Navigation View\' to enable controls and navigate within pages. For info about visualization <a href="#" onclick="$(\'#help\').show();return false;">click here</a> or on \'About\' menu',''];
+	var catTipMsgIndex = 0;
+
+	var navTipMsgs = ['Click on \'rays\' to select them and then on \'Go to entry\' for navigation.','Use the sliding bar on left to set the minimum treshold of link relevence.','You can sort links alphabeticallly or by relevance using radio buttons on the left.','Click on \'Category View\' to see the visualization of category structure.',''];
+	var navTipMsgIndex = 0;
+	
+	var ajaxCalls = [];
+
+	
+	var browserFont = true;
+	
+	var embededProcessing;
+	
+	var paper;
+	
+	var colorSets = [[[0,0,0],[100,100,100],[205,205,205],[150,150,150],[80,80,80],[20,20,20]],
+					[[0, 83, 107],[138, 247, 145],[255,255,255],[159, 191, 167],[159, 191, 167],[0, 83, 107]]];
+	var cssColors = [['#000',''],['#00536B','']];
+	
+	var activeColorsIndex = 0;
+	var activeColors = colorSets[activeColorsIndex];
+
+				
+				//alert(linkCount+" "+rectWidth);
+
+	var rectOffset ;
+	
+	function switchColors()
+	{
+		activeColorsIndex = (activeColorsIndex+1)%colorSets.length;
+		activeColors = colorSets[activeColorsIndex];
+		changed= true;
+		complexDone = false;
+		$('.top h2').css('color',cssColors[activeColorsIndex][0]);
+	}
+
+	function arrayToColor(arr, processing)
+	{
+		return processing.color(arr[0],arr[1],arr[2]);
+	}
+	
+
+	
+	function disableControls() {$('#top-disabler').show();}
+	function enableControls()  { $('#top-disabler').hide();}	
+
+	function showTip(message) {
+		if(message!=null) {
+			$('#tip').fadeOut(800, function () {$('#tip .message').html(message); $('#tip').fadeIn(1800); }); 
+		}
+		else
+			$('#tip').hide();
+		 
+		 
+	}
+
+	function buildComplexDS()
+	{
+		disableControls();
+		if(complexDS == null)
+		{
+			mainCategories = {};
+			//topCategories = {};
+			//tempCategories = {};
+			ajaxCalls = [];
+			complexDone = false;
+			//console.log("cats "+$(transformed).find("parentCategory").size());
+			$(transformed).find("parentCategory").each(function()
+			{
+				var catTitle=$(this).attr("title");
+				var catId=$(this).attr("id");
+				//console.log(catTitle);
+				mainCategories[catId]={id:catId,title:catTitle,linkPositions:[]};
+			});
+			var cc = 0;
+			var relTresh = $('#rel-cache').val();
+			$(transformed).find("LinkOut").each(function(index)
+			{
+					//var title=$(this).find("title").text();
+					var relatedness=$(this).find("relatedness").text();
+					if(relatedness<relTresh)
+						return;
+					var id=$(this).find("id").text();
+					if(id==articleId) {
+						//console.log('same '+id);
+						return true; // aka continue
+					}
+					var _url = BY_ID+id; 
+					//if (cc < 30)
+					//{
+					var xhr = $.ajax({
+						type: "GET",
+						url: _url,
+						dataType: "xml",
+						async: true,
+						success: function(xxml) 
+						{
+							processCategory(xxml,index);
+							//trimTopCategories();
+							////console.log(topCategories.length);
+				
+						}
+					})
+					ajaxCalls.push(xhr);
+					//}
+					cc++;
+					
+			});
+
+		
+		}
+	}
+	
+	function processCategory(xxml,cc)
+	{
+		$(xxml).find("parentCategory").each(function()
+		{
+			var catTitle=$(this).attr("title");
+			var catId=$(this).attr("id");
+			var categoryData = mainCategories[catId];
+			if(categoryData!=null)
+			{
+				//console.log("lilnk# "+cc+" and "+catTitle);
+				categoryData.linkPositions.push(cc);
+			}
+			if(tmpCategories[catId]==null)
+			{
+				////console.log(tmpCategories[catId]);
+				tmpCategories[catId]={id:catId,title:catTitle,count:1};
+			}
+			else
+			{
+				////console.log(tmpCategories[catId].count);
+				if(tmpCategories[catId].count==1)
+				{
+					topCategories[catId]={id:catId,title:catTitle,count:2};
+					tmpCategories[catId]={id:catId,title:catTitle,count:2};
+				}
+				else
+				{
+					var ccount = topCategories[catId].count;
+					topCategories[catId]={id:catId,title:catTitle,count:ccount+1};
+				}
+			}
+		})
+		complexDone = false;
+	}
+	
+	function cancelAjaxCalls()
+	{
+		for(var i=0;i<ajaxCalls.length;i++)
+		{
+			ajaxCalls[i].abort();
+		}
+		ajaxCalls = [];
+	}
+
+	function toggleBrowseFont()
+	{
+		browserFont = !browserFont;
+		$('.toggle-font').html(browserFont ? 'SVG Font' : 'Embedded Font');
+		if(browserFont)
+		{
+			infoFont=embededProcessing.loadFont("Arial");
+			smallFont=embededProcessing.loadFont("Arial");
+		}
+		else
+		{
+			infoFont=embededProcessing.loadFont("arial.svg");
+			smallFont=embededProcessing.loadFont("arial.svg");
+		}
+		changed = true;
+	}
+	function sortMethod(sortMethod)
+	{
+			transformed = transformXML($('#rel-cache').val(),sortMethod);
+			$('#sort-cache').val(sortMethod);
+			changed = true;
+			updateLink();
+	}
+	
+	function changeArticle(article)
+	{
+		article=article.replaceAll(' ','%2B');
+		article=article.replaceAll('_','%2B');
+		fileLoaded=0;
+		getXML(article,false);
+		transformed = transformXML($('#rel-cache').val(),$('#sort-cache').val());
+		changed = true;
+		updateLink();
+
+	}
+
+	function changeArticleById(id,linkxml)
+	{
+		fileLoaded=0;
+		if(linkxml==null)
+			getXML(id,true);
+		else
+		{
+			xml=linkxml;
+			fileLoaded=2;
+		}
+		transformed = transformXML($('#rel-cache').val(),$('#sort-cache').val());
+		$('#article').val($(xml).find("message").attr('title'));
+		changed = true;
+		lock=false;
+		updateLink();
+
+	}
+	
+	function updateLink()
+	{
+		var url1= 'http://sepans.com/wikistalker/?';
+		url1+='title='+$('#article').val();
+		url1+='&relatedness='+$('#rel-cache').val();
+		url1+='&sortMethod='+$('#sort-cache').val();
+		$('#setting_link').attr("href", url1);
+
+	}
+	
+	function getURLParameter(name) {
+		return unescape(
+			(RegExp(name + '=' + '(.+?)(&|$)').exec(location.search)||[,null])[1]
+		);
+	}
+
+
+	
+$(document).ready(function() {
+	//alert("Use 'Link View' for browsing and 'Category View' (NEW!) to see category structure.");
+	//$('#help').hide();
+	$("#rel-slider" ).slider({max: 100, value: 50,
+   slide: function(event, ui) {
+			transformed = transformXML(ui.value/100,$('#sort-cache').val());
+			$('#rel-cache').val(ui.value/100);
+			changed = true;
+			$("#rel-val" ).text(ui.value+'%');
+			showTip(getTipMessage('nav'));
+
+   
+   }
+ });
+ 	paper = Raphael("history_canvas", 400, 400);
+
+   //alert(ui.value);
+   categoryView(); // default view: category
+ 
+});
+
+
+	function getWikiArticle(pageId)
+	{
+		$("#wiki_content").show();
+	   var wiki_api = '/proxy.php?proxy_url='+'http://en.wikipedia.org/w/api.php?action=query%26prop=revisions%26rvprop=content%26format=xml%26pageids='+pageId;
+	  // var wiki_xml = loadXML(wiki_api,true);
+	  	$.ajax({
+			type: "GET",
+			url: wiki_api,
+			dataType: "xml",
+			success: function(wiki_xml) 
+			{
+				//////console.log('xml '+wiki_xml);
+				var content = $(wiki_xml).find('rev').text();
+				//////console.log(content.wiki2html());
+				var htmlOutput = content.wiki2html();
+				var regex = /\{\{([^}]+)\}\}/g;
+				//console.log( htmlOutput.replace(regex, ''));
+
+
+				htmlOutput = htmlOutput.replace(regex, '');
+				htmlOutput = htmlOutput.replace(/\|/g,'* ');
+
+				$("#wiki_text").html(htmlOutput);
+				$('#article_header').text($('#article').val());
+
+
+			}
+		})	
+	}
+	
+
+
+	function getXML(article,search_by_id)
+	{
+	xsl = loadXML('wikiminer2.xsl',false);
+	 
+	if(search_by_id)	
+		xml = loadXML(BY_ID+article,false);
+	else
+		xml = loadXML(BY_TERM+article,false);
+	 
+	//alert($(xml).find("Response").attr('id'));
+	articleId=$(xml).find("message").attr('id');
+	//console.log('aaaa '+articleId);
+	showTooltip(articleId, $('#center'),null); 
+	
+	 //xml = loadXML('service.xml');
+	 
+	
+	};
+	
+	function transformXML(treshold,sortMethod) {
+	
+	////console.log('transform1');
+	if(fileLoaded!=2)
+	{
+		////console.log('transform timeout');
+		setTimeout("transformXML($('#rel-cache').val(),$('#sort-cache').val())",200);
+		return;
+	}
+	//////console.log(xml);
+	var senseId = $(xml).find("Sense");
+	//////console.log(senseId.length);
+	if(senseId.length>0)
+	{
+		var ccount =0;
+		senseId = $(xml).find("Sense").each(function(index){
+		//alert(index);
+			if(ccount==0) {
+				fileLoaded=0;
+				getXML(senseId.attr('id'),true);
+				setTimeout("transformXML($('#rel-cache').val(),$('#sort-cache').val())",200);
+				//////console.log('sense '+senseId.attr('id'));
+			}
+			ccount++;
+		});
+		return;
+	}
+	//////console.log('sense '+$(xml).find("sense")+senseId);
+
+		
+	var xmll = typeof xml == 'string' 
+          ? new DOMParser().parseFromString(xml, 'text/xml') 
+          : xml // assume this is a node already
+      ,xsll = typeof xsl == 'string'
+           ? new DOMParser().parseFromString(xsl, 'text/xml')
+           : xsl // assume this is a node already
+      ,processor = new XSLTProcessor();
+
+	processor.importStylesheet(xsll);
+	 processor.setParameter(null,"treshold", treshold);
+	 processor.setParameter(null,"sortMethod", sortMethod);
+
+	//alert('transform: '+treshold);
+	////console.log('transforming');
+	transformed= processor.transformToDocument(xmll.firstChild);
+	////console.log(transformed);
+			changed = true;
+
+	
+	return transformed;
+
+	}
+
+	function loadXML(_url,aasync)
+	{
+		var ret;
+		//////console.log('async? '+aasync);
+		$.ajax({
+			type: "GET",
+			url: _url,
+			dataType: "xml",
+			async: aasync,
+			success: function(xxml) 
+			{
+				ret = xxml;
+				fileLoaded ++;
+				if(fileLoaded==2)
+				{
+					var artId = $(xxml).find("message").attr('id');
+					var artTitle = $(xxml).find("message").attr('title');
+					var currentEntry = {id: artId, title: artTitle, links: xxml };
+					tracking.push(currentEntry);
+					trackIndex=tracking.length-1;
+				}
+
+			}
+		})	
+
+		return ret;
+	}
+	
+	function drawHistory()
+	{
+		paper.rect(0,0,400,400).attr({fill: '#FFF', stroke: '#FFF'});
+		$.each(tracking, function(index, value) { 
+					var t = paper.text(50+index*10, (index+1)*20, value.title);
+					t.attr({'text-anchor': 'start'}); 
+					if(trackIndex==index)
+						t.attr({fill: "red"});
+					else
+						t.attr({fill: "black"});
+
+					
+					$(t.node).mouseover(function() {
+						t.attr("fill", "green");
+						this.style.cursor='pointer';
+					});
+					$(t.node).mouseout(function() {
+						if(trackIndex==index)
+							t.attr({fill: "red"});
+						else
+							t.attr({fill: "black"});
+						this.style.cursor='default';
+					});
+					t.node.onclick = function () {
+						//alert("click");
+						t.attr("fill", "blue");
+						grayOut(false);
+						$('#wiki_content').hide();
+						$('#history_canvas').hide();
+						trackIndex=index;
+						changeArticleById(value.id,value.links);
+						
+						
+					};
+
+		});
+
+		
+		//var c = paper.circle(300, 300, 100).attr({fill: "red"});
+	
+	}
+
+	
+	</script>
+	<script id="script1" type="text/javascript">  
+	function drawSingleBar(processing,theta,count,relatedness,title,rectOffset,rectWidth,highlighted,mutual)
+	{
+		processing.pushMatrix();
+		var angle =theta* count;
+		var rectDist = RX;
+		var textDist = RX;
+		var textColor= 255;
+		var textOffset = 0;
+		//processing.stroke(0, 83, 107);
+		processing.stroke(arrayToColor(activeColors[0],processing));//0, 0, 0); //cblack
+		if(highlighted)
+		{
+			var oldWidth=rectWidth;
+			//processing.fill(138, 247, 145);
+			processing.fill(arrayToColor(activeColors[1],processing));//(100, 100, 100);  //cblack
+			processing.stroke(255);
+			rectWidth=Math.min(rectWidth*2,Math.max(20,rectWidth));
+			var fontSize = Math.min(rectWidth,25);
+			processing.textFont(infoFont,fontSize);
+			rectOffset-=(rectWidth-oldWidth)/2;
+			textColor = 0;
+			textOffset = (fontSize>20) ? 0 : 3;
+		}
+		else
+		{
+			//processing.fill(0, 83, 107);
+			processing.fill(arrayToColor(activeColors[0],processing));  //cblack
+		}
+		var endofRect = rectDist+(relatedness*relatedness*500);
+		if(angle> processing.PI/2 && angle < 3*processing.PI/2)
+		{
+			endofRect = -endofRect;
+			angle = angle - processing.PI -0.64*theta;
+			rectDist=-(RX+(relatedness*relatedness*500));
+			var fontSize = Math.min(rectWidth,25);
+			var fontWidth = infoFont.width(' ')*fontSize*2;
+			var myWidth = infoFont.width( title ) * fontSize;
+			textDist=-(RX+myWidth+fontWidth);
+		}
+		processing.translate(processing.width/2,processing.height/2);
+		processing.rotate(angle);
+		//scale(1,mirror);
+		//scale(mirror,1);
+		processing.rect(rectDist,rectOffset, (relatedness*relatedness*500),rectWidth);
+		//processing.stroke(0, 83, 107);
+		processing.stroke(arrayToColor(activeColors[0],processing)); //cblack
+		processing.fill(255);
+		if(mutual )
+		{
+			var circleR = Math.min(rectWidth*3,70);
+			processing.ellipse(endofRect,rectOffset*0.6,circleR,circleR);
+		}
+		processing.fill(textColor);
+		// for loaded fonnts, the text is displaced
+		processing.fill(arrayToColor(activeColors[2],processing)); //cblack  - for text
+		if(browserFont)
+		{
+			processing.text(" "+title,textDist,textOffset);
+		}
+		else
+		{
+			processing.pushMatrix();
+			processing.translate(0,-rectWidth);
+			processing.text(" "+title,textDist,textOffset);
+			processing.popMatrix();
+		}
+		//end
+		processing.popMatrix();
+	}
+	function sketchProc(processing) {  
+		
+		embededProcessing = processing;
+		processing.setup = function() {  
+		
+			var param_title=getURLParameter('title');
+			if(param_title=='null')
+				param_title='Jorge%2BLuis%2BBorges';
+			var param_method=getURLParameter('sortMethod');
+			if(param_method=='null')
+				param_method='title';
+			
+			var param_relate=getURLParameter('relatedness');
+
+			var param_complex=getURLParameter('complex');
+			if(param_relate=='null')
+				param_relate='0.5';
+			//alert(param_title==null);
+			param_title=param_title.replaceAll(' ','%2B');
+			param_title=param_title.replaceAll('_','%2B');
+
+			
+			getXML(param_title,false);
+			transformed = transformXML(param_relate,param_method);
+			
+			showTooltip(articleId, $('#center'),null);
+
+			processing.background(255);  
+			//infoFont=processing.loadFont("arial.svg");
+			//smallFont=processing.loadFont("arial.svg");
+			
+			if(browserFont)
+			{
+				infoFont=embededProcessing.loadFont("Arial");
+				smallFont=embededProcessing.loadFont("Arial");
+			}
+			else
+			{
+				infoFont=embededProcessing.loadFont("arial.svg");
+				smallFont=embededProcessing.loadFont("arial.svg");
+			}			
+			$('#article').val($(xml).find("message").attr('title'));
+			updateLink();
+			
+			if(param_complex=='false')
+				complex = false;
+			if(complex)
+				buildComplexDS();
+
+
+		//alert(transformed);
+		}
+		processing.draw = function() {  
+		
+			if(changed)
+			{
+				
+				
+				
+				processing.background(255);  
+
+				linkCount = $(transformed).find("LinkOut").length;			
+				//console.log('link count '+linkCount);
+				var theta = processing.TWO_PI/(linkCount);
+				RX = 200;//linkCount>50 ? 200 : 150;
+				rectWidth = Math.min(Math.round(2*(RX*processing.PI)/linkCount),50);
+				
+				//alert(linkCount+" "+rectWidth);
+
+				rectOffset = -(rectWidth-2);
+				
+
+				processing.fill(0);
+				
+				//processing.textFont(infoFont,15);
+				//processing.text($('#article').val(),processing.width/2-50,processing.height/2);
+				//processing.text("Number of links: "+linkCount,processing.width/2-70,processing.height/2+15);
+				
+				var fontSize = Math.min(rectWidth,25);
+	
+				processing.textFont(smallFont,fontSize);
+				
+				entries=new Array();
+				var count = 0;
+
+				$(transformed).find("LinkOut").each(function()
+				{
+					var title=$(this).find("title").text();
+					var relatedness=$(this).find("relatedness").text();
+					var id=$(this).find("id").text();
+					var mutual = false;
+					//processing.ellipse(linkCount+10,10,10,10);
+					//processing.fill(0);
+					//processing.text(title,10,10*linkCount);
+					var linkinXpath = "//LinkIn[id=\'"+id+"\']/id";
+					var evaluator = new XPathEvaluator();
+					var result = evaluator.evaluate(linkinXpath, transformed, null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+					if(result.snapshotLength>0)
+					{
+						mutual = true;
+					}
+
+					drawSingleBar(processing,theta,count,relatedness,title,rectOffset,rectWidth,false,mutual);
+					
+					var angle =theta* count;
+					entries[count]={"index":linkCount,"title":title,"relatedness":relatedness,"id":id,"angle":angle,"mutual":mutual};
+
+					count++;
+					
+					
+				}); 
+				processing.fill(255);
+				processing.stroke(arrayToColor(activeColors[0],processing));
+				processing.ellipse(processing.width/2,processing.height/2,2*RX+5,2*RX+5);
+				changed = false;
+				prevFrameHover = -1;
+			}
+			else if (complex  )
+			{
+				$('#tooltip').hide();
+				$('#define-menu').hide();
+				if(!complexDone)
+				{
+					processing.fill(255);
+					processing.stroke(arrayToColor(activeColors[0],processing));
+					processing.ellipse(processing.width/2,processing.height/2,2*RX+5,2*RX+5);
+					var mainKeys = mainCategories.keys();
+					var mainCount = mainKeys.length;
+					var theta = 2*processing.PI/mainCount;//processing.radians(2);//
+					var catR = 40;
+					processing.pushMatrix();
+					processing.translate(processing.width/2,processing.height/2);
+					for(var i=0;i<mainCount;i++)
+					{
+						var catId = mainKeys[i];
+						//processing.fill(255);
+						var angle = theta*i;
+						
+						var linkPositions = mainCategories[catId].linkPositions;
+						for(var k=0;k<linkPositions.length;k++)
+						{
+							var position=linkPositions[k];
+							var linkPosition = [];
+							linkPosition[0] = RX*processing.cos(position/linkCount*2*processing.PI);
+							linkPosition[1] = RX*processing.sin(position/linkCount*2*processing.PI);
+							////console.log(catR*processing.cos(angle)+" "+catR*processing.sin(angle)+" "+linkPosition[0]+" "+linkPosition[1])
+							//processing.line(catR*processing.cos(i*theta),catR*processing.sin(i*theta),linkPosition[0],linkPosition[1]);
+							processing.noFill();
+							//processing.stroke(159, 191, 167); 
+							processing.stroke(arrayToColor(activeColors[3],processing)); //cblack 
+							processing.bezier(
+											(catR+30)*processing.cos(i*theta),(catR+30)*processing.sin(i*theta),
+											(catR+100)*processing.cos(i*theta),(catR+100)*processing.sin(i*theta),
+											(catR+30)*processing.cos(i*theta)+linkPosition[0]/3,(catR+30)*processing.sin(i*theta)+linkPosition[1]/3,
+											//(RX-50)*processing.cos(position/linkCount*2*processing.PI),(RX-50)*processing.sin(position/linkCount*2*processing.PI),
+											linkPosition[0],linkPosition[1]
+											);
+											
+						}
+						
+						processing.noFill();
+						//processing.stroke(0, 83, 107);
+						processing.stroke(arrayToColor(activeColors[4],processing)); //cblack
+						processing.ellipse(catR*processing.cos(angle),catR*processing.sin(angle),60,60);
+						if(mainCount<10) {
+							//processing.stroke(159, 191, 167);
+							processing.stroke(arrayToColor(activeColors[3],processing)); //cbalck
+							processing.ellipse(catR*processing.cos(1.43*angle),catR*processing.sin(1.43*angle),60,60);
+						}
+						//processing.textAlign(processing.LEFT,processing.TOP);
+						var catTitle = mainCategories[catId].title;
+						//processing.textSize(11);
+						processing.textFont(infoFont,11);
+
+						processing.fill(arrayToColor(activeColors[5],processing)); //cblack
+						//processing.fill(255);
+						//processing.stroke(0,83,107);
+						processing.pushMatrix();
+						var textDist = 0;
+						var mirror= 1;
+						if(catTitle.length>25)
+							catTitle = catTitle.substring(0,25)+"...";
+						if(angle> processing.PI/2 && angle < 3*processing.PI/2)
+						{
+							angle = angle - processing.PI +(browserFont ? 0.78 : 2.0)*theta;
+							var fontWidth = infoFont.width(' ')*11*2;
+							var myWidth = infoFont.width( catTitle ) * 11;
+							textDist=-(myWidth);
+							mirror = -1;
+							//processing.textAlign(processing.RIGHT);
+						}
+						processing.translate(mirror*catR*processing.cos(angle),mirror*catR*processing.sin(angle)-5);
+						processing.rotate(angle);
+						processing.text(catTitle,textDist,0,110,25);
+						processing.popMatrix();
+						
+
+						
+						
+
+					}
+					processing.popMatrix();
+					complexDone = true;
+				}
+				//processing.textAlign(processing.LEFT,processing.BOTTOM);
+				return;
+			
+			}
+			prevFrameHover = hover;
+
+			
+			if(linkCount==0 || lock)
+				return;
+			var x = processing.mouseX-processing.width/2;
+			var y = processing.mouseY-processing.height/2;
+			var mouseAngle = processing.atan2(y,x);
+			hover = -1;
+			if(mouseAngle<0)
+			{
+				mouseAngle=2*processing.PI+mouseAngle;
+			}
+			var dist = processing.dist(x,y,0,0);
+			if(dist>RX)
+			{
+				var theta = processing.TWO_PI/(linkCount);
+				var index= Math.floor(mouseAngle/theta)+1;
+				if (index>entries.length-1)
+					index=0;
+				var relatedness = entries[index].relatedness;
+				if(dist<relatedness*relatedness*500+RX)
+				{
+					drawSingleBar(processing,theta,index,relatedness,entries[index].title,rectOffset,rectWidth,true,entries[index].mutual);
+					hover = entries[index].id;
+					$('#canvas1').css('cursor', 'pointer');
+					if(processing.mouseButton ==processing.LEFT)
+					{
+						//alert('lock');
+						lock=true;
+						processing.mouseButton =processing.CENTER; //?!?!
+						$('#define-menu').show();
+						showTooltip(hover, $('#center'),null);
+						$('#show_article').delay(500).slideUp('slow');
+						$('#loading').show();
+						defined = true;
+					}
+				}
+				else
+				{
+					$('#canvas1').css('cursor', 'auto');
+
+				}
+				// higlight
+			}
+			if(!lock && prevFrameHover!=hover)
+			{
+				changed=true;
+				$('#define-menu').hide();
+			}
+			/*
+				defined = false;
+				//$('#center').hide();
+				$('#define-menu').hide();
+				$('#show_article').delay(500).slideDown('slow');
+				if(hover==-1)
+					showTooltip(articleId, $('#center'),null);
+			}
+			else if(hover!=-1 && !defined)
+			{
+				
+				$('#define-menu').show();
+				showTooltip(hover, $('#center'),null);
+				$('#show_article').delay(500).slideUp('slow');
+				$('#loading').show();
+				defined = true;
+				
+			}*/
+		//	processing.fill(255);
+		//	processing.rect(processing.width/2-160,processing.height/2+20,250,50);
+		//	processing.fill(150);
+		//	processing.text("prevHover "+prevFrameHover+" hover "+hover+"changed "+changed,processing.width/2-150,processing.height/2+30);
+		};  
+     
+ }  
+   
+ var canvas = document.getElementById("canvas1");  
+ // attaching the sketchProc function to the canvas  
+ var p = new Processing(canvas, sketchProc);  
+ // p.exit(); to detach it  
+	
+	</script>
+	
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-11178641-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+</body>
+</html>
