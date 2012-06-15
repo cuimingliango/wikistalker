@@ -1,6 +1,6 @@
 <html>
 <head>
-	<title>Wikistalker - Wikipedia Article Structure Visualization</title>
+	<title>Wikistalker - Wikipedia Article Structure Visualization sss</title>
 	
 	<meta name='description' content='Wikistalker - Wikipedia Article Structure Visualization'/>
 	<meta name='keywords' content='wikistalker, wiki stalker, wikipedia stalker, mapping wikipedia, cybercartography, wikipedia visualization, category structure visualization, link relevance visualization, hiedegger,hyperlink ,internet,map,mapped wiki,spaciality ,wikipedia,tower of babel,visualization,processing.org, processingjs, cyberspace'/>
@@ -209,11 +209,12 @@ padding: 10px;}
 
 
 
-//	var BY_TERM = '/proxy.php?proxy_url='+'http://wikipedia-miner.cms.waikato.ac.nz/services/exploreArticle?outLinks=true%26parentCategories=true%26linkRelatedness=true%26title=';
-//	var BY_ID = '/proxy.php?proxy_url='+'http://wikipedia-miner.cms.waikato.ac.nz/services/exploreArticle?outLinks=true%26parentCategories=true%26linkRelatedness=true%26id=';
+	var BY_TERM = '/proxy.php?proxy_url='+'http://wikipedia-miner.cms.waikato.ac.nz/services/exploreArticle?outLinks=true%26parentCategories=true%26linkRelatedness=true%26title=';
+	var BY_ID = '/proxy.php?proxy_url='+'http://wikipedia-miner.cms.waikato.ac.nz/services/exploreArticle?outLinks=true%26parentCategories=true%26linkRelatedness=true%26id=';
 
-	var BY_TERM = 'xslt.php?title=';
-	var BY_ID = 'xslt.php?id=';
+	var BY_TERM_JSON = '/proxy.php?proxy_url='+'http://wikipedia-miner.cms.waikato.ac.nz/services/exploreArticle?outLinks=true%26parentCategories=true%26linkRelatedness=true%26responseFormat=json%26title=';
+	var BY_ID_JSON = '/proxy.php?proxy_url='+'http://wikipedia-miner.cms.waikato.ac.nz/services/exploreArticle?outLinks=true%26parentCategories=true%26linkRelatedness=true%26responseFormat=json%26id=';
+
 	
 	var fileLoaded = 0;
 	var xsl;
@@ -225,7 +226,12 @@ padding: 10px;}
 	var prevFrameHover = -1;
 	var defined = false;
 	var RX;
+	
 	var linkCount;
+	var sortedLinks;
+	var json_cache;
+	
+	
 	var entries = new Array();
 	var rectWidth ;
 	var infoFont;
@@ -418,7 +424,9 @@ padding: 10px;}
 	}
 	function sortMethod(sortMethod)
 	{
-			transformed = transformXML($('#rel-cache').val(),sortMethod);
+			//transformed = transformXML($('#rel-cache').val(),sortMethod);
+			console.log(sortMethod);
+			sortedLinks = sortJSON(json_cache,sortMethod);
 			$('#sort-cache').val(sortMethod);
 			changed = true;
 			updateLink();
@@ -429,9 +437,14 @@ padding: 10px;}
 		article=article.replaceAll(' ','%2B');
 		article=article.replaceAll('_','%2B');
 		fileLoaded=0;
-		console.log('changeArticle');
-		getXML(article,false);
-		transformed = transformXML($('#rel-cache').val(),$('#sort-cache').val());
+		
+		//getXML(article,false);
+		//transformed = transformXML($('#rel-cache').val(),$('#sort-cache').val());
+		
+		$.getJSON(BY_TERM_JSON+param_title, function(data) {
+			console.log('json');
+			console.log(data);
+		});
 		changed = true;
 		updateLink();
 
@@ -440,16 +453,20 @@ padding: 10px;}
 	function changeArticleById(id,linkxml)
 	{
 		fileLoaded=0;
-				console.log('changeArticleById');
-
-		if(linkxml==null)
+		/*if(linkxml==null)
 			getXML(id,true);
 		else
 		{
 			xml=linkxml;
 			fileLoaded=2;
-		}
-		transformed = transformXML($('#rel-cache').val(),$('#sort-cache').val());
+		}*/
+		//transformed = transformXML($('#rel-cache').val(),$('#sort-cache').val());
+		
+		$.getJSON(BY_ID_JSON+id, function(data) {
+			console.log('json');
+			console.log(data);
+		});
+
 		$('#article').val($(xml).find("message").attr('title'));
 		changed = true;
 		lock=false;
@@ -480,7 +497,7 @@ $(document).ready(function() {
 	//$('#help').hide();
 	$("#rel-slider" ).slider({max: 100, value: 50,
    slide: function(event, ui) {
-			transformed = transformXML(ui.value/100,$('#sort-cache').val());
+			//transformed = transformXML(ui.value/100,$('#sort-cache').val());
 			$('#rel-cache').val(ui.value/100);
 			changed = true;
 			$("#rel-val" ).text(ui.value+'%');
@@ -492,7 +509,8 @@ $(document).ready(function() {
  	paper = Raphael("history_canvas", 400, 400);
 
    //alert(ui.value);
-   categoryView(); // default view: category
+  // categoryView(); // default view: category
+  linkView();
  
 });
 
@@ -528,114 +546,6 @@ $(document).ready(function() {
 	}
 	
 
-
-	function getXML(article,search_by_id)
-	{
-	//xsl = loadXML('wikiminer2.xsl',false);
-	 console.log('calling loadxml'+search_by_id);
-	if(search_by_id)	
-		xml = loadXML(BY_ID+article,false);
-	else
-		xml = loadXML(BY_TERM+article,false);
-	 
-	//alert($(xml).find("Response").attr('id'));
-/*	articleId=$(xml).find("message").attr('id');
-	console.log('aaaa '+articleId);
-	showTooltip(articleId, $('#center'),null); */
-	
-	 //xml = loadXML('service.xml');
-	 
-	
-	};
-	
-	function transformXML(treshold,sortMethod) {
-	//changed = true;
-	return xml;
-	/*
-	
-	////console.log('transform1');
-
-	if(fileLoaded!=2)
-	{
-		////console.log('transform timeout');
-		setTimeout("transformXML($('#rel-cache').val(),$('#sort-cache').val())",200);
-		return;
-	}
-	//////console.log(xml);
-	var senseId = $(xml).find("Sense");
-	//////console.log(senseId.length);
-	if(senseId.length>0)
-	{
-		var ccount =0;
-		senseId = $(xml).find("Sense").each(function(index){
-		//alert(index);
-			if(ccount==0) {
-				fileLoaded=0;
-				getXML(senseId.attr('id'),true);
-				setTimeout("transformXML($('#rel-cache').val(),$('#sort-cache').val())",200);
-				//////console.log('sense '+senseId.attr('id'));
-			}
-			ccount++;
-		});
-		return;
-	}
-	//////console.log('sense '+$(xml).find("sense")+senseId);
-
-		
-	var xmll = typeof xml == 'string' 
-          ? new DOMParser().parseFromString(xml, 'text/xml') 
-          : xml // assume this is a node already
-      ,xsll = typeof xsl == 'string'
-           ? new DOMParser().parseFromString(xsl, 'text/xml')
-           : xsl // assume this is a node already
-      ,processor = new XSLTProcessor();
-
-	processor.importStylesheet(xsll);
-	 processor.setParameter(null,"treshold", treshold);
-	 processor.setParameter(null,"sortMethod", sortMethod);
-
-	//alert('transform: '+treshold);
-	////console.log('transforming');
-	transformed= processor.transformToDocument(xmll.firstChild);
-	////console.log(transformed);
-			changed = true;
-
-	
-	return transformed;
-	*/
-	}
-
-	function loadXML(_url,aasync)
-	{
-		var ret;
-		//////console.log('async? '+aasync);
-		console.log('sepans');
-		$.ajax({
-			type: "GET",
-			url: _url,
-			dataType: "xml",
-			async: aasync,
-			success: function(xxml) 
-			{
-				console.log('sepans2');
-				ret = xxml;
-				//fileLoaded ++;
-				//if(fileLoaded==2)
-				//{
-					var artId = $(xxml).find("message").attr('id');
-					var artTitle = $(xxml).find("message").attr('title');
-					console.log(xxml);
-					var currentEntry = {id: artId, title: artTitle, links: xxml };
-					tracking.push(currentEntry);
-					trackIndex=tracking.length-1;
-				//}
-
-			}
-		})	
-
-		return ret;
-	}
-	
 	function drawHistory()
 	{
 		paper.rect(0,0,400,400).attr({fill: '#FFF', stroke: '#FFF'});
@@ -750,10 +660,26 @@ $(document).ready(function() {
 		//end
 		processing.popMatrix();
 	}
+	
+	function sortJSON(data,sortMethod) {
+		var ret;
+		console.log(sortMethod);
+		if(sortMethod=='relatedness') {
+			ret=data.outLinks.sort(function(a,b) { return parseFloat(a.relatedness) - parseFloat(b.relatedness) } );
+		}
+		else {
+			console.log('sort method is title');
+			ret=data.outLinks.sort(function(a,b) { return a.title > b.title ? 1 : -1 } );
+		}
+		return ret;
+	}
+	
+	 
 	function sketchProc(processing) {  
 		
 		embededProcessing = processing;
 		processing.setup = function() {  
+			console.log('setup');
 		
 			var param_title=getURLParameter('title');
 			if(param_title=='null')
@@ -771,12 +697,26 @@ $(document).ready(function() {
 			param_title=param_title.replaceAll(' ','%2B');
 			param_title=param_title.replaceAll('_','%2B');
 
-					console.log('processing');
-
-			getXML(param_title,false);
-			transformed = transformXML(param_relate,param_method);
 			
-			showTooltip(articleId, $('#center'),null);
+			//getXML(param_title,false);
+			//transformed = transformXML(param_relate,param_method);
+			
+			changed = false; // to stop drawing
+
+			$.getJSON(BY_TERM_JSON+param_title, function(data) {
+				console.log('json');
+				//console.log(data);
+				json_cache = data;
+				sortedLinks = sortJSON(data);
+				articleId= data.id;
+				console.log(articleId);
+				showTooltip(articleId, $('#center'),null);
+				//$('#tooltip').show();
+				
+				changed = true;
+			});
+			
+			
 
 			processing.background(255);  
 			//infoFont=processing.loadFont("arial.svg");
@@ -812,9 +752,18 @@ $(document).ready(function() {
 				
 				processing.background(255);  
 
-				linkCount = $(transformed).find("LinkOut").length;	
-					//console.log(transformed);
-				console.log('link count '+linkCount);
+				//linkCount = $(transformed).find("LinkOut").length;
+				linkCount = 0;
+				$(sortedLinks).each(function()
+				{
+					if(this.relatedness<$('#rel-cache').val()) 
+						return;
+					linkCount++;
+					
+				});
+				//linkCount = transformed.length;			
+				//console.log('link count '+linkCount);
+				
 				var theta = processing.TWO_PI/(linkCount);
 				RX = 200;//linkCount>50 ? 200 : 150;
 				rectWidth = Math.min(Math.round(2*(RX*processing.PI)/linkCount),50);
@@ -837,23 +786,30 @@ $(document).ready(function() {
 				entries=new Array();
 				var count = 0;
 
-				$(transformed).find("LinkOut").each(function()
+				$(sortedLinks).each(function()
 				{
-					var title=$(this).find("title").text();
-					var relatedness=$(this).find("relatedness").text();
-					var id=$(this).find("id").text();
+					//console.log(this);
+					var title=this.title;
+					var relatedness=this.relatedness;
+					if(relatedness<$('#rel-cache').val())
+						return true;  // continue
+					//console.log('title '+title);
+					var id=this.id;
+					
 					var mutual = false;
 					//processing.ellipse(linkCount+10,10,10,10);
 					//processing.fill(0);
 					//processing.text(title,10,10*linkCount);
-					var linkinXpath = "//LinkIn[id=\'"+id+"\']/id";
+					/*var linkinXpath = "//LinkIn[id=\'"+id+"\']/id";
 					var evaluator = new XPathEvaluator();
 					var result = evaluator.evaluate(linkinXpath, transformed, null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 					if(result.snapshotLength>0)
 					{
 						mutual = true;
 					}
+*/
 
+//TODO mutual
 					drawSingleBar(processing,theta,count,relatedness,title,rectOffset,rectWidth,false,mutual);
 					
 					var angle =theta* count;
@@ -962,7 +918,7 @@ $(document).ready(function() {
 			}
 			prevFrameHover = hover;
 
-			
+			/*
 			if(linkCount==0 || lock)
 				return;
 			var x = processing.mouseX-processing.width/2;
@@ -1010,28 +966,8 @@ $(document).ready(function() {
 				changed=true;
 				$('#define-menu').hide();
 			}
-			/*
-				defined = false;
-				//$('#center').hide();
-				$('#define-menu').hide();
-				$('#show_article').delay(500).slideDown('slow');
-				if(hover==-1)
-					showTooltip(articleId, $('#center'),null);
-			}
-			else if(hover!=-1 && !defined)
-			{
-				
-				$('#define-menu').show();
-				showTooltip(hover, $('#center'),null);
-				$('#show_article').delay(500).slideUp('slow');
-				$('#loading').show();
-				defined = true;
-				
-			}*/
-		//	processing.fill(255);
-		//	processing.rect(processing.width/2-160,processing.height/2+20,250,50);
-		//	processing.fill(150);
-		//	processing.text("prevHover "+prevFrameHover+" hover "+hover+"changed "+changed,processing.width/2-150,processing.height/2+30);
+			
+			*/
 		};  
      
  }  
@@ -1043,6 +979,15 @@ $(document).ready(function() {
 	
 	</script>
 	
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-11178641-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
 
 
 
