@@ -75,9 +75,9 @@ padding: 10px;}
 		<div class="disabling" id="top-disabler" style="display:none"></div>
 		<h2>Wikistalker</h2>
 		<div style="color: red; margin-top: 6px;">
-			<span style="padding-left: 10px;">Firefox Only!</span>
+			<!--<span style="padding-left: 10px;">Firefox Only!</span>-->
 		</div>
-		<label for="title">Complete Wikipedia Title: </label><br/><input id="article" type="text" size="30" value="Tower of Babel"/> <span class="btn" onclick="changeArticle($('#article').val())">Go!</span><br/>
+		<label for="title" style="float: left;">Complete Wikipedia Title: </label><br/><input id="article" type="text" size="30" value="Tower of Babel"/> <span class="btn" onclick="changeArticle($('#article').val())">Go!</span><br/>
 		Minimum Link Relevance: <span id="rel-val" >50%</span> <div id="rel-slider" class="slider"></div>
 		<div>Sort By: 
 				<label for="relatedness">Relatedness </label><input type="radio" name="sort" id="relatedness" class="radio" onclick="sortMethod('relatedness');"/>
@@ -93,7 +93,7 @@ padding: 10px;}
 	<div id="center"></div>
 	<div id="define-menu" class="top_nav" style="display:none">
 	
-		<a href="#" onclick="changeArticleById(hover);return false;">Go to Entry</a>  <a href="#" class="right" onclick="lock=false;showTooltip(articleId, $('#center'),null);return false;">Back to browsing</a>
+		<a href="#" onclick="changeArticleById(hover);return false;">Navigate to Entry</a>  <a href="#" class="right" onclick="lock=false;showTooltip(articleId, $('#center'),null);return false;">Cancel</a>
 	</div>
 	<div id="loading"><img src="/images/loading.gif" alt="loading..."/></div>
 	<input type="hidden" id="rel-cache" value="0.5"/>
@@ -316,26 +316,27 @@ padding: 10px;}
 			ajaxCalls = [];
 			complexDone = false;
 			//console.log("cats "+$(transformed).find("parentCategory").size());
-			$(transformed).find("parentCategory").each(function()
+			$(json_cache.parentCategories).each(function()
 			{
-				var catTitle=$(this).attr("title");
-				var catId=$(this).attr("id");
+				var catTitle=this.title;
+				var catId=this.id;
 				//console.log(catTitle);
 				mainCategories[catId]={id:catId,title:catTitle,linkPositions:[]};
 			});
 			var cc = 0;
 			var relTresh = $('#rel-cache').val();
-			$(transformed).find("LinkOut").each(function(index)
+			$(json_cache.outLinks).each(function(index)
 			{
 					//var title=$(this).find("title").text();
-					var relatedness=$(this).find("relatedness").text();
+					var relatedness=this.relatedness;
 					if(relatedness<relTresh)
 						return;
-					var id=$(this).find("id").text();
+					var id=this.id;
 					if(id==articleId) {
 						//console.log('same '+id);
 						return true; // aka continue
 					}
+					console.log('cat '+id);
 					var _url = BY_ID+id; 
 					//if (cc < 30)
 					//{
@@ -441,10 +442,8 @@ padding: 10px;}
 		//getXML(article,false);
 		//transformed = transformXML($('#rel-cache').val(),$('#sort-cache').val());
 		
-		$.getJSON(BY_TERM_JSON+param_title, function(data) {
-			console.log('json');
-			console.log(data);
-		});
+		processArticleJSON(BY_TERM_JSON+article);
+		
 		changed = true;
 		updateLink();
 
@@ -462,12 +461,9 @@ padding: 10px;}
 		}*/
 		//transformed = transformXML($('#rel-cache').val(),$('#sort-cache').val());
 		
-		$.getJSON(BY_ID_JSON+id, function(data) {
-			console.log('json');
-			console.log(data);
-		});
+		processArticleJSON(BY_ID_JSON+id);
+		
 
-		$('#article').val($(xml).find("message").attr('title'));
 		changed = true;
 		lock=false;
 		updateLink();
@@ -495,7 +491,7 @@ padding: 10px;}
 $(document).ready(function() {
 	//alert("Use 'Link View' for browsing and 'Category View' (NEW!) to see category structure.");
 	//$('#help').hide();
-	$("#rel-slider" ).slider({max: 100, value: 50,
+	$("#rel-slider" ).slider({max: 100, value: 50,min: 1,
    slide: function(event, ui) {
 			//transformed = transformXML(ui.value/100,$('#sort-cache').val());
 			$('#rel-cache').val(ui.value/100);
@@ -674,6 +670,23 @@ $(document).ready(function() {
 		return ret;
 	}
 	
+	function processArticleJSON(url) {
+	
+				$.getJSON(url, function(data) {
+				console.log('json');
+				//console.log(data);
+				json_cache = data;
+				sortedLinks = sortJSON(data);
+				articleId= data.id;
+				console.log(articleId);
+				showTooltip(articleId, $('#center'),null);
+				//$('#tooltip').show();
+				
+				$('#article').val(data.title);
+
+				changed = true;
+			});
+	}
 	 
 	function sketchProc(processing) {  
 		
@@ -703,21 +716,10 @@ $(document).ready(function() {
 			
 			changed = false; // to stop drawing
 
-			$.getJSON(BY_TERM_JSON+param_title, function(data) {
-				console.log('json');
-				//console.log(data);
-				json_cache = data;
-				sortedLinks = sortJSON(data);
-				articleId= data.id;
-				console.log(articleId);
-				showTooltip(articleId, $('#center'),null);
-				//$('#tooltip').show();
-				
-				changed = true;
-			});
-			
-			
+			processArticleJSON(BY_TERM_JSON+param_title);
 
+			
+		
 			processing.background(255);  
 			//infoFont=processing.loadFont("arial.svg");
 			//smallFont=processing.loadFont("arial.svg");
@@ -797,9 +799,7 @@ $(document).ready(function() {
 					var id=this.id;
 					
 					var mutual = false;
-					//processing.ellipse(linkCount+10,10,10,10);
-					//processing.fill(0);
-					//processing.text(title,10,10*linkCount);
+
 					/*var linkinXpath = "//LinkIn[id=\'"+id+"\']/id";
 					var evaluator = new XPathEvaluator();
 					var result = evaluator.evaluate(linkinXpath, transformed, null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -918,7 +918,7 @@ $(document).ready(function() {
 			}
 			prevFrameHover = hover;
 
-			/*
+			
 			if(linkCount==0 || lock)
 				return;
 			var x = processing.mouseX-processing.width/2;
@@ -967,7 +967,7 @@ $(document).ready(function() {
 				$('#define-menu').hide();
 			}
 			
-			*/
+			
 		};  
      
  }  
