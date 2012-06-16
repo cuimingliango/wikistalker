@@ -1,6 +1,6 @@
 <html>
 <head>
-	<title>Wikistalker - Wikipedia Article Structure Visualization</title>
+	<title>Wikistalker - Wikipedia Article Structure Visualization sss</title>
 	
 	<meta name='description' content='Wikistalker - Wikipedia Article Structure Visualization'/>
 	<meta name='keywords' content='wikistalker, wiki stalker, wikipedia stalker, mapping wikipedia, cybercartography, wikipedia visualization, category structure visualization, link relevance visualization, hiedegger,hyperlink ,internet,map,mapped wiki,spaciality ,wikipedia,tower of babel,visualization,processing.org, processingjs, cyberspace'/>
@@ -75,9 +75,9 @@ padding: 10px;}
 		<div class="disabling" id="top-disabler" style="display:none"></div>
 		<h2>Wikistalker</h2>
 		<div style="color: red; margin-top: 6px;">
-			<span style="padding-left: 10px;">Firefox Only!</span>
+			<!--<span style="padding-left: 10px;">Firefox Only!</span>-->
 		</div>
-		<label for="title">Complete Wikipedia Title: </label><br/><input id="article" type="text" size="30" value="Tower of Babel"/> <span class="btn" onclick="changeArticle($('#article').val())">Go!</span><br/>
+		<label for="title" style="float: left;">Complete Wikipedia Title: </label><br/><input id="article" type="text" size="30" value="Tower of Babel"/> <span class="btn" onclick="changeArticle($('#article').val())">Go!</span><br/>
 		Minimum Link Relevance: <span id="rel-val" >50%</span> <div id="rel-slider" class="slider"></div>
 		<div>Sort By: 
 				<label for="relatedness">Relatedness </label><input type="radio" name="sort" id="relatedness" class="radio" onclick="sortMethod('relatedness');"/>
@@ -93,7 +93,7 @@ padding: 10px;}
 	<div id="center"></div>
 	<div id="define-menu" class="top_nav" style="display:none">
 	
-		<a href="#" onclick="changeArticleById(hover);return false;">Go to Entry</a>  <a href="#" class="right" onclick="lock=false;showTooltip(articleId, $('#center'),null);return false;">Back to browsing</a>
+		<a href="#" onclick="changeArticleById(hover);return false;">Navigate to Entry</a>  <a href="#" class="right" onclick="lock=false;showTooltip(articleId, $('#center'),null);return false;">Cancel</a>
 	</div>
 	<div id="loading"><img src="/images/loading.gif" alt="loading..."/></div>
 	<input type="hidden" id="rel-cache" value="0.5"/>
@@ -211,6 +211,10 @@ padding: 10px;}
 
 	var BY_TERM = '/proxy.php?proxy_url='+'http://wikipedia-miner.cms.waikato.ac.nz/services/exploreArticle?outLinks=true%26parentCategories=true%26linkRelatedness=true%26title=';
 	var BY_ID = '/proxy.php?proxy_url='+'http://wikipedia-miner.cms.waikato.ac.nz/services/exploreArticle?outLinks=true%26parentCategories=true%26linkRelatedness=true%26id=';
+
+	var BY_TERM_JSON = '/proxy.php?proxy_url='+'http://wikipedia-miner.cms.waikato.ac.nz/services/exploreArticle?outLinks=true%26parentCategories=true%26linkRelatedness=true%26responseFormat=json%26title=';
+	var BY_ID_JSON = '/proxy.php?proxy_url='+'http://wikipedia-miner.cms.waikato.ac.nz/services/exploreArticle?outLinks=true%26parentCategories=true%26linkRelatedness=true%26responseFormat=json%26id=';
+
 	
 	var fileLoaded = 0;
 	var xsl;
@@ -222,7 +226,12 @@ padding: 10px;}
 	var prevFrameHover = -1;
 	var defined = false;
 	var RX;
+	
 	var linkCount;
+	var sortedLinks;
+	var json_cache;
+	
+	
 	var entries = new Array();
 	var rectWidth ;
 	var infoFont;
@@ -307,26 +316,27 @@ padding: 10px;}
 			ajaxCalls = [];
 			complexDone = false;
 			//console.log("cats "+$(transformed).find("parentCategory").size());
-			$(transformed).find("parentCategory").each(function()
+			$(json_cache.parentCategories).each(function()
 			{
-				var catTitle=$(this).attr("title");
-				var catId=$(this).attr("id");
+				var catTitle=this.title;
+				var catId=this.id;
 				//console.log(catTitle);
 				mainCategories[catId]={id:catId,title:catTitle,linkPositions:[]};
 			});
 			var cc = 0;
 			var relTresh = $('#rel-cache').val();
-			$(transformed).find("LinkOut").each(function(index)
+			$(json_cache.outLinks).each(function(index)
 			{
 					//var title=$(this).find("title").text();
-					var relatedness=$(this).find("relatedness").text();
+					var relatedness=this.relatedness;
 					if(relatedness<relTresh)
 						return;
-					var id=$(this).find("id").text();
+					var id=this.id;
 					if(id==articleId) {
 						//console.log('same '+id);
 						return true; // aka continue
 					}
+					console.log('cat '+id);
 					var _url = BY_ID+id; 
 					//if (cc < 30)
 					//{
@@ -415,7 +425,9 @@ padding: 10px;}
 	}
 	function sortMethod(sortMethod)
 	{
-			transformed = transformXML($('#rel-cache').val(),sortMethod);
+			//transformed = transformXML($('#rel-cache').val(),sortMethod);
+			console.log(sortMethod);
+			sortedLinks = sortJSON(json_cache,sortMethod);
 			$('#sort-cache').val(sortMethod);
 			changed = true;
 			updateLink();
@@ -426,8 +438,12 @@ padding: 10px;}
 		article=article.replaceAll(' ','%2B');
 		article=article.replaceAll('_','%2B');
 		fileLoaded=0;
-		getXML(article,false);
-		transformed = transformXML($('#rel-cache').val(),$('#sort-cache').val());
+		
+		//getXML(article,false);
+		//transformed = transformXML($('#rel-cache').val(),$('#sort-cache').val());
+		
+		processArticleJSON(BY_TERM_JSON+article);
+		
 		changed = true;
 		updateLink();
 
@@ -436,15 +452,18 @@ padding: 10px;}
 	function changeArticleById(id,linkxml)
 	{
 		fileLoaded=0;
-		if(linkxml==null)
+		/*if(linkxml==null)
 			getXML(id,true);
 		else
 		{
 			xml=linkxml;
 			fileLoaded=2;
-		}
-		transformed = transformXML($('#rel-cache').val(),$('#sort-cache').val());
-		$('#article').val($(xml).find("message").attr('title'));
+		}*/
+		//transformed = transformXML($('#rel-cache').val(),$('#sort-cache').val());
+		
+		processArticleJSON(BY_ID_JSON+id);
+		
+
 		changed = true;
 		lock=false;
 		updateLink();
@@ -472,9 +491,9 @@ padding: 10px;}
 $(document).ready(function() {
 	//alert("Use 'Link View' for browsing and 'Category View' (NEW!) to see category structure.");
 	//$('#help').hide();
-	$("#rel-slider" ).slider({max: 100, value: 50,
+	$("#rel-slider" ).slider({max: 100, value: 50,min: 1,
    slide: function(event, ui) {
-			transformed = transformXML(ui.value/100,$('#sort-cache').val());
+			//transformed = transformXML(ui.value/100,$('#sort-cache').val());
 			$('#rel-cache').val(ui.value/100);
 			changed = true;
 			$("#rel-val" ).text(ui.value+'%');
@@ -486,7 +505,8 @@ $(document).ready(function() {
  	paper = Raphael("history_canvas", 400, 400);
 
    //alert(ui.value);
-   categoryView(); // default view: category
+  // categoryView(); // default view: category
+  linkView();
  
 });
 
@@ -522,107 +542,6 @@ $(document).ready(function() {
 	}
 	
 
-
-	function getXML(article,search_by_id)
-	{
-	xsl = loadXML('wikiminer2.xsl',false);
-	 
-	if(search_by_id)	
-		xml = loadXML(BY_ID+article,false);
-	else
-		xml = loadXML(BY_TERM+article,false);
-	 
-	//alert($(xml).find("Response").attr('id'));
-	articleId=$(xml).find("message").attr('id');
-	//console.log('aaaa '+articleId);
-	showTooltip(articleId, $('#center'),null); 
-	
-	 //xml = loadXML('service.xml');
-	 
-	
-	};
-	
-	function transformXML(treshold,sortMethod) {
-	
-	////console.log('transform1');
-	if(fileLoaded!=2)
-	{
-		////console.log('transform timeout');
-		setTimeout("transformXML($('#rel-cache').val(),$('#sort-cache').val())",200);
-		return;
-	}
-	//////console.log(xml);
-	var senseId = $(xml).find("Sense");
-	//////console.log(senseId.length);
-	if(senseId.length>0)
-	{
-		var ccount =0;
-		senseId = $(xml).find("Sense").each(function(index){
-		//alert(index);
-			if(ccount==0) {
-				fileLoaded=0;
-				getXML(senseId.attr('id'),true);
-				setTimeout("transformXML($('#rel-cache').val(),$('#sort-cache').val())",200);
-				//////console.log('sense '+senseId.attr('id'));
-			}
-			ccount++;
-		});
-		return;
-	}
-	//////console.log('sense '+$(xml).find("sense")+senseId);
-
-		
-	var xmll = typeof xml == 'string' 
-          ? new DOMParser().parseFromString(xml, 'text/xml') 
-          : xml // assume this is a node already
-      ,xsll = typeof xsl == 'string'
-           ? new DOMParser().parseFromString(xsl, 'text/xml')
-           : xsl // assume this is a node already
-      ,processor = new XSLTProcessor();
-
-	processor.importStylesheet(xsll);
-	 processor.setParameter(null,"treshold", treshold);
-	 processor.setParameter(null,"sortMethod", sortMethod);
-
-	//alert('transform: '+treshold);
-	////console.log('transforming');
-	transformed= processor.transformToDocument(xmll.firstChild);
-	////console.log(transformed);
-			changed = true;
-
-	
-	return transformed;
-
-	}
-
-	function loadXML(_url,aasync)
-	{
-		var ret;
-		//////console.log('async? '+aasync);
-		$.ajax({
-			type: "GET",
-			url: _url,
-			dataType: "xml",
-			async: aasync,
-			success: function(xxml) 
-			{
-				ret = xxml;
-				fileLoaded ++;
-				if(fileLoaded==2)
-				{
-					var artId = $(xxml).find("message").attr('id');
-					var artTitle = $(xxml).find("message").attr('title');
-					var currentEntry = {id: artId, title: artTitle, links: xxml };
-					tracking.push(currentEntry);
-					trackIndex=tracking.length-1;
-				}
-
-			}
-		})	
-
-		return ret;
-	}
-	
 	function drawHistory()
 	{
 		paper.rect(0,0,400,400).attr({fill: '#FFF', stroke: '#FFF'});
@@ -737,10 +656,43 @@ $(document).ready(function() {
 		//end
 		processing.popMatrix();
 	}
+	
+	function sortJSON(data,sortMethod) {
+		var ret;
+		console.log(sortMethod);
+		if(sortMethod=='relatedness') {
+			ret=data.outLinks.sort(function(a,b) { return parseFloat(a.relatedness) - parseFloat(b.relatedness) } );
+		}
+		else {
+			console.log('sort method is title');
+			ret=data.outLinks.sort(function(a,b) { return a.title > b.title ? 1 : -1 } );
+		}
+		return ret;
+	}
+	
+	function processArticleJSON(url) {
+	
+				$.getJSON(url, function(data) {
+				console.log('json');
+				//console.log(data);
+				json_cache = data;
+				sortedLinks = sortJSON(data);
+				articleId= data.id;
+				console.log(articleId);
+				showTooltip(articleId, $('#center'),null);
+				//$('#tooltip').show();
+				
+				$('#article').val(data.title);
+
+				changed = true;
+			});
+	}
+	 
 	function sketchProc(processing) {  
 		
 		embededProcessing = processing;
 		processing.setup = function() {  
+			console.log('setup');
 		
 			var param_title=getURLParameter('title');
 			if(param_title=='null')
@@ -759,11 +711,15 @@ $(document).ready(function() {
 			param_title=param_title.replaceAll('_','%2B');
 
 			
-			getXML(param_title,false);
-			transformed = transformXML(param_relate,param_method);
+			//getXML(param_title,false);
+			//transformed = transformXML(param_relate,param_method);
 			
-			showTooltip(articleId, $('#center'),null);
+			changed = false; // to stop drawing
 
+			processArticleJSON(BY_TERM_JSON+param_title);
+
+			
+		
 			processing.background(255);  
 			//infoFont=processing.loadFont("arial.svg");
 			//smallFont=processing.loadFont("arial.svg");
@@ -798,8 +754,18 @@ $(document).ready(function() {
 				
 				processing.background(255);  
 
-				linkCount = $(transformed).find("LinkOut").length;			
+				//linkCount = $(transformed).find("LinkOut").length;
+				linkCount = 0;
+				$(sortedLinks).each(function()
+				{
+					if(this.relatedness<$('#rel-cache').val()) 
+						return;
+					linkCount++;
+					
+				});
+				//linkCount = transformed.length;			
 				//console.log('link count '+linkCount);
+				
 				var theta = processing.TWO_PI/(linkCount);
 				RX = 200;//linkCount>50 ? 200 : 150;
 				rectWidth = Math.min(Math.round(2*(RX*processing.PI)/linkCount),50);
@@ -822,23 +788,28 @@ $(document).ready(function() {
 				entries=new Array();
 				var count = 0;
 
-				$(transformed).find("LinkOut").each(function()
+				$(sortedLinks).each(function()
 				{
-					var title=$(this).find("title").text();
-					var relatedness=$(this).find("relatedness").text();
-					var id=$(this).find("id").text();
+					//console.log(this);
+					var title=this.title;
+					var relatedness=this.relatedness;
+					if(relatedness<$('#rel-cache').val())
+						return true;  // continue
+					//console.log('title '+title);
+					var id=this.id;
+					
 					var mutual = false;
-					//processing.ellipse(linkCount+10,10,10,10);
-					//processing.fill(0);
-					//processing.text(title,10,10*linkCount);
-					var linkinXpath = "//LinkIn[id=\'"+id+"\']/id";
+
+					/*var linkinXpath = "//LinkIn[id=\'"+id+"\']/id";
 					var evaluator = new XPathEvaluator();
 					var result = evaluator.evaluate(linkinXpath, transformed, null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 					if(result.snapshotLength>0)
 					{
 						mutual = true;
 					}
+*/
 
+//TODO mutual
 					drawSingleBar(processing,theta,count,relatedness,title,rectOffset,rectWidth,false,mutual);
 					
 					var angle =theta* count;
@@ -995,28 +966,8 @@ $(document).ready(function() {
 				changed=true;
 				$('#define-menu').hide();
 			}
-			/*
-				defined = false;
-				//$('#center').hide();
-				$('#define-menu').hide();
-				$('#show_article').delay(500).slideDown('slow');
-				if(hover==-1)
-					showTooltip(articleId, $('#center'),null);
-			}
-			else if(hover!=-1 && !defined)
-			{
-				
-				$('#define-menu').show();
-				showTooltip(hover, $('#center'),null);
-				$('#show_article').delay(500).slideUp('slow');
-				$('#loading').show();
-				defined = true;
-				
-			}*/
-		//	processing.fill(255);
-		//	processing.rect(processing.width/2-160,processing.height/2+20,250,50);
-		//	processing.fill(150);
-		//	processing.text("prevHover "+prevFrameHover+" hover "+hover+"changed "+changed,processing.width/2-150,processing.height/2+30);
+			
+			
 		};  
      
  }  
