@@ -1,0 +1,191 @@
+<html>
+<head>
+	<title>Wikistalker - Wikipedia Article Structure Visualization sss</title>
+	
+	<meta name='description' content='Wikistalker - Wikipedia Article Structure Visualization'/>
+	<meta name='keywords' content='wikistalker, wiki stalker, wikipedia stalker, mapping wikipedia, cybercartography, wikipedia visualization, category structure visualization, link relevance visualization, hiedegger,hyperlink ,internet,map,mapped wiki,spaciality ,wikipedia,tower of babel,visualization,processing.org, processingjs, cyberspace'/>
+	<link rel="canonical" href="http://sepans.com/wikistalker" />
+	
+	<script type="text/javascript" src="js/d3.min.js"></script>
+	<script type="text/javascript" src="js/jquery-2.0.3.min.js"></script>
+	<script type="text/javascript" src="js/wikistalker.js"></script>
+
+	<!--<script type="application/processing" src="js/framework.pde"></script>-->
+	
+	<style type="text/css">
+		body{ font-family: arial,sans-serif;; font-size: 11px; margin: 30px;}
+		.slider { width: 200px; margin: 5px 0 }
+		#params { padding: 20px 0 0 350px;}
+		#canvas_span {position: absolute;}
+		.top {z-index: 100; position: fixed; border: 1px solid #000; background-color: #FFF; padding: 10px; width: 207px;}
+		.top input {margin-top: 3px;}
+		.top section { margin: 8px 0; display: block;}
+		#article {border: 1px solid #666; height: 25px; width: 170px; padding: 3px; margin-bottom: 5px;}
+		#rel-val {font-size: 14px; font-weight: bold;}
+		.radio {vertical-align: middle; }
+		.btn { border: 1px solid black; padding: 5px 3px; cursor: pointer; background-color: #DDD;}
+		.btn:hover {background-color: #CCC;}
+		#tooltip {z-index: 100; position: absolute; width: 250px; background: none; max-height: 300px; overflow: hidden; 
+			/*border: 1px solid #9FBFA7;*/ }
+		#tooltip img {display: block;  border: 1px solid black;margin: 5px auto;}
+		#tooltip a { color: #000;}
+		#center {z-index: 100; position: absolute; top: 420px; left: 450px;}
+		.top_nav {z-index: 100; position: absolute; top: 380; left: 480; width: 200px;}
+		#loading {z-index: 100; position: absolute; top: 420; left: 570; width: 200px; display: none;}
+		#define-menu img {margin: 20px 80px; z-index: 90;}
+		a {color: #666;text-decoration: none;}
+		.right {float: right}
+		.power {position: absolute; top: 1000px; left: 500px;font-size: 12px; float: right; }
+		#wiki_content { position: absolute; z-index: 250; width: 600px; top: 80px; left: 1000px;  background-color: #FFF; opacity: 0.9; padding: 10px; display: none; border: 1px solid #000;}
+		#top_nav {position: fixed; top: 30px; left: 270px; z-index: 300; background-color: #FFF; border: 1px solid #000; width: 100%; opacity: .8;
+padding: 10px;}
+		#top_nav a {color: #000; margin-right: 15px; padding: 2px 5px 10px;}
+		#wiki_text  { max-height: 700px; overflow: auto;}
+		#wiki_text a {color: #000; }
+		
+		#history_canvas {z-index:250;display:none; position: absolute; top:100; left: 270;}
+		#define-menu a { color: #000; font-size: 12px; font-weight: bold;}
+		.top h1 {margin:0; color: #000; width: 100%; font-size: 16px; padding: 0;}
+		#help {  position: fixed; top: 245px; left: 30px; border: 1px solid #000; z-index: 200;
+		width: 600px; background-color: #fff; padding: 10px; font-size: 12px; display: none; opacity: 0.95;}
+		#help b { color: #000; background-color: #CCC; padding: 2px; font-weight: normal;}
+		#heip a { text-decoration: underline; color: #000; }
+		#help h2 { }
+		.disabling {position: absolute; top: 0; left: 0; width:100%; height: 100%; z-index: 1000; display:none; background-color: #FFF; opacity: 0.5; }
+		#tip {position: fixed; top: 80px; left: 270px; padding: 5px; z-index: 500; font-size: 10px; 
+			color: #444; border: 1px solid #444; width: 200px; display: none; background: #FFF; opacity: .8;}
+		#tip .message {color: #00BBBB;}
+		#rel-slider { border-radius: 0px; border: 1px solid black; height: 10px; }
+		#rel-slider a { border-radius: 1px; border: 1px solid black; background: #000;}
+		
+		#d3 { position: absolute; top: 100px; left: 100px;}
+
+		#d4 { position: absolute; top: 600px; left: 100px;}
+
+
+		.bar rect { fill: #111;}
+		.bar:hover rect { fill: #aaa; width: 10px;}
+		
+		.bar:hover {width: 10px; cursor: pointer;}
+		.bar text { fill: #ccc; /*fill-opacity: 0;*/}
+		.bar:hover .text { fill: #000;  fill-opacity: 1;}
+	</style>
+
+</head>
+<body>
+	<div id="top_nav">
+		<a href="#" id="linkViewLink" onclick="linkView();return false;" alt="Browse thtough entries">Navigate</a>
+		<a href="#" id="categoryViewLink" onclick="categoryView();">Category Structure</a>
+		<a href="#" id="articleViewLink" onclick="articleView();">Show Article</a>
+		<a href="#" onclick="$('#help').show();return false;">About</a>
+<!--		<a href="#" id="historyViewLink" onclick="historyView();">History</a>
+		<a href="#" onclick="switchColors();">Switch Colors</a>
+		<a href="#" onclick="$('#help').show();return false;">About</a>
+		<a href="http://sepans.com/sp/works/wikistalker" target="_new" >More Info</a>
+		<span style="margin-left: 40px;">If text is not readable use SVG fonts. This may slow down rendering. <a href="#" class="toggle-font" style="text-decoration: underline;" onclick="toggleBrowseFont();return false;">SVG Font!</a> </span>-->
+		<!--<a href="#" onclick="$('#canvas1').width(600);$('#canvas1').height(500);getWikiArticle(articleId);return false; ">Side By Side</a>-->
+	</div>
+	<div class="top">
+		<div class="disabling" id="top-disabler" style="display:none"></div>
+		<h1>Wikistalker</h1>
+		<section>
+			<label for="title">Artile Title: </label><input id="article" type="text" size="30" value="Tower of Babel"/> <input type="button" class="btn" onclick="changeArticle($('#article').val())" value="Go!"></input>
+		</section>
+		<section>
+			Link Filter: <span id="rel-val" >50%</span> relevant <div id="rel-slider" class="slider"> </div>
+		</section>
+		<section>
+			<div><label>Sort By:</lable> 
+					<label for="relatedness">Relatedness </label><input type="radio" name="sort" id="relatedness" class="radio" onclick="sortMethod('relatedness');"/>
+					<label for="title">Title </label><input type="radio" name="sort" id="title" class="radio" onclick="showTip(getTipMessage('nav'));;sortMethod('title');" checked="true"/>
+			</div>
+		</section>
+		<section>
+				<a href="" id="setting_link">Link to this setting</a>
+		</section>
+	</div>
+	<div id="tip">
+		Tip: <span class="message">Click on 'Navigation View' to enable controls and navigate</span>
+		<a style="float:right; border: 1px solid #666; padding: 2px;" alt="close" href="#" onclick="$('#tip').hide();">X</a>
+	</div>
+	<div id="tooltip-container">
+		<div id="tooltip"></div>
+		<div id="define-menu" class="top_nav" style="display:none">
+		
+			<a href="#" onclick="changeArticleById(hover);return false;">Navigate to Entry >></a>  <a href="#" class="right" onclick="lock=false;showTooltip(articleId, $('#center'),null);return false;">X Cancel</a>
+		
+		</div>
+	</div>
+	<div id="center"></div>
+	<div id="loading"><img src="/images/loading.gif" alt="loading..."/></div>
+	<input type="hidden" id="rel-cache" value="0.5"/>
+	<input type="hidden" id="sort-cache" value="title"/>
+	<!--
+	<span id="canvas_span"><canvas id="canvas1" width="1100" height="1000"></canvas></span>
+	
+	<div id="history_canvas">
+			<a class="right" href="#" onclick="$('#history_canvas').hide();grayOut(false);linkView();return false;">close</a>
+
+	</div>
+	-->
+	<div id="wiki_content">
+		<a class="right" href="#" onclick="$('#wiki_content').hide();grayOut(false);linkView();return false;">close</a>
+		<h2 id="article_header"></h2>
+		<div id="wiki_text">
+			<img src="/images/loading.gif"/>
+		</div>
+	</div>
+	<div id="help">
+		<a href="#" style="float: right" onclick="$('#help').hide();">close this!</a>
+		<h2>About Wikistalker</h2>
+		<p><a title="Try Wikistalker" href="../../wikistalker" target="_blank">Wikistalker</a>, inspired by &#8216;<a href="http://www.visualcomplexity.com/vc/project_details.cfm?index=7&amp;id=7&amp;domain" target="_blank">Web Stalker</a>&#8216;, is a way of understanding a concept by only seeing the  visualization of the meta-structure of its Wikipedia article.</p>
+<p>In this visualization, a &#8216;sun&#8217; in generated for each article. Each ray  represents an  <b>out-going link</b>. The length of each link shows the <b>semantic relevance</b>  between those two linked articles based on &#8216;<a href="http://wikipedia-miner.cms.waikato.ac.nz/" target="_blank">Wikipedia Miner</a>&#8216; measures.</p>
+
+<p>In the middle, in the <b>category view</b> tab, Wikistalker illustrates how  links are related to the main entry based on how many categories they  have in common. The category view mesh shows which links are  ontologically related versus rays that show semantic relevance.</p>
+<p>In <b>Navigation View</b> tab a short description appears in the middle and you can navigate in Wikistalker by clicking on links.</p>
+<p>This project is implemented in <b>HTML5</b> using <a href="http://processingjs.org" target="_new">processingjs</a> and raphaeljs.</p>
+		<p>You can filter links by their relatedness using the <b>sliding bar</b> and sort them <b>alphabetically</b> or by <b>relevance</b>. </p>
+		<p><b>Circles</b> on the end of the links are for articles that are mutually linked.</p>
+	</div>
+	
+	<span class="power">By <a href="http://sepans.com" target="_new">Sepand</a> Powered by <a href="http://wikipedia-miner.cms.waikato.ac.nz/" target="_new">Wikipedia Miner</a></span>
+
+    <div id="d3"></div>
+    <div id="d4"></div>
+    
+	<script type="text/javascript">
+	
+	
+	$(document).ready(function() { 
+        console.log('read');
+    
+        var wikistalker = new Wikistalker({title:'borges', container: '#d3'});  
+
+
+       var wikistalker2 = new Wikistalker({title:'tehran', container: '#d4'});  
+       
+      /* 
+       setTimeout(function() {
+            wikistalker.changeRelevanceCutoff(0.6);
+       },5000);
+    */
+    
+        $("#rel-slider" ).slider({max: 100, value: 50,min: 1,
+            slide: function(event, ui) {
+                
+                wikistalker.changeRelevanceCutoff(ui.value/100);
+           }
+        });
+    });
+
+
+
+
+	</script>
+	
+
+
+
+
+</body>
+</html>
