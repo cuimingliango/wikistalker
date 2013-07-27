@@ -9,23 +9,36 @@
 	<script type="text/javascript" src="js/d3.min.js"></script>
 	<script type="text/javascript" src="js/jquery-2.0.3.min.js"></script>
 	<script type="text/javascript" src="js/jquery-ui-1.10.3.custom.min.js"></script>
+	<script type="text/javascript" src="js/wiki2html.js"></script>
+	
+	<script type="text/javascript" src="http://code.jquery.com/jquery-migrate-1.0.0.js"></script>
+	<script type="text/javascript" src="https://www.gstatic.com/freebase/suggest/4_2/suggest.min.js"></script>
+	
+	<script type="text/javascript" src="https://raw.github.com/furf/jquery-ui-touch-punch/master/jquery.ui.touch-punch.js"></script>
+
 
 	<script type="text/javascript" src="js/wikistalker.js"></script>
 
 
     <link rel="stylesheet" type="text/css" href="js/jquery-ui-1.10.3.custom.css" />
+    
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/freebase/suggest/4_2/suggest.min.css" />
 
 	<!--<script type="application/processing" src="js/framework.pde"></script>-->
 	
 	<style type="text/css">
-		body{ font-family: arial,sans-serif;; font-size: 11px; margin: 30px;}
-		.slider { width: 200px; margin: 5px 0 }
+		body{ font-family: arial,sans-serif;; font-size: 11px; margin: 10px; overflow-y: hidden;}
+		.slider { width: 180px; margin: 5px 0 }
+		.ui-slider-range { background-color: #888;
+          background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.3) 3px, rgba(255,255,255,.3) 13px);
+		}
+		
 		#params { padding: 20px 0 0 350px;}
 		#canvas_span {position: absolute;}
-		.top {z-index: 100; position: fixed; border: 1px solid #000; background-color: #FFF; padding: 10px; width: 207px;}
+		.top {z-index: 100; position: absolute;   padding: 10px; width: 185px; border: 1px solid #000;}
 		.top input {margin-top: 3px;}
 		.top section { margin: 8px 0; display: block;}
-		#article {border: 1px solid #666; height: 25px; width: 170px; padding: 3px; margin-bottom: 5px;}
+		#article {border: 1px solid #666; height: 25px; width: 150px; padding: 3px; margin-bottom: 5px;}
 		#rel-val {font-size: 14px; font-weight: bold;}
 		.radio {vertical-align: middle; }
 		.btn { border: 1px solid black; padding: 5px 3px; cursor: pointer; background-color: #DDD;}
@@ -36,15 +49,32 @@
 		#tooltip a { color: #000;}
 		#center {z-index: 100; position: absolute; top: 420px; left: 450px;}
 		.top_nav {z-index: 100; position: absolute; top: 380; left: 480; width: 200px;}
-		#loading {z-index: 100; position: absolute; top: 420; left: 570; width: 200px; display: none;}
+		
+		#loading {z-index: 200; position: absolute; top: 350px; left: 380px; width: 250px; height: 100px; background-color: rgba(255,255,255,0.6); }
+		#loading img { margin: 20px auto; display: block;}
+
+		#small-loading {z-index: 200; position: absolute; top: 520px; left: 870px; width: 200px; height: 90px; background-color: rgba(255,255,255,0.6); display:none; }
+		#small-loading img { margin: 20px auto; display: block;}
+		
 		#define-menu img {margin: 20px 80px; z-index: 90;}
 		a {color: #666;text-decoration: none;}
 		.right {float: right}
-		.power {position: absolute; top: 1000px; left: 500px;font-size: 12px; float: right; }
-		#wiki_content { position: absolute; z-index: 250; width: 600px; top: 80px; left: 1000px;  background-color: #FFF; opacity: 0.9; padding: 10px; display: none; border: 1px solid #000;}
-		#top_nav {position: fixed; top: 30px; left: 270px; z-index: 300; background-color: #FFF; border: 1px solid #000; width: 100%; opacity: .8;
+		.power {position: fixed; bottom: 10px; left: 10px;font-size: 12px; float: right; z-index: 200;  }
+		#wiki_content { position: absolute; z-index: 250; width: 500px; min-height: 15px; max-height: 680px; overflow-y: auto; overflow-x: hidden; top: 50px; left: 830px;  background-color: #FFF; opacity: 0.9; padding: 10px; display: none; border: 1px solid #000;}
+		#wiki_content .close {}
+		#wiki_content a { color: #000;}
+		#wiki_content a:hover { text-decoration: underline; }
+		
+		.close {display: block; color: #000; text-align: center; border: 1px solid black; padding: 1px 2px 3px 2px; cursor: pointer; width: 10px; height: 10px;
+		position: absolute; top: 7px; right: 7px;}
+		
+		#top_nav {position: absolute; top: 10px; left: 225px; z-index: 300; background-color: #FFF; border: 1px solid #000; width: 100%; opacity: .8;
 padding: 10px;}
 		#top_nav a {color: #000; margin-right: 15px; padding: 2px 5px 10px;}
+		
+		.tab {border-bottom: 1px solid #FFF; border-top: 1px solid black; border-right: 1px solid black; border-left: 1px solid black;}
+		
+		
 		#wiki_text  { max-height: 700px; overflow: auto;}
 		#wiki_text a {color: #000; }
 		
@@ -63,9 +93,10 @@ padding: 10px;}
 		#rel-slider { border-radius: 0px; border: 1px solid black; height: 10px; }
 		#rel-slider a { border-radius: 1px; border: 1px solid black; background: #000;}
 		
-		#d3 { position: absolute; top: 40px; left: 110px;}
+		#d3 { position: absolute; top: 0px; left: 100px;}
 
-		#d4 { position: absolute; top: 600px; left: 100px;}
+
+		.small-svg .bar, .small-svg .bar:hover  { cursor: default;}
 
 
 		.bar rect { fill: #111;}
@@ -75,42 +106,57 @@ padding: 10px;}
 		.bar text { fill: #ccc; fill-opacity: 0;}
 		.bar:hover .text { fill: #000;  fill-opacity: 1 !important;}
 		
-		.preview p { margin: 0; cursor: pointer;}
+		.preview p { margin: 0; }
+		.preview {background: url('img/arrow.png') 165px 4px no-repeat; padding-right: 40px; width: 180px; cursor: pointer;}
+		.preview:hover b {text-decoration: underline;}
 		.preview-circle { cursor: pointer;}
+		
+		.li.fbs-item { border-color: #aaa;}
+		.fbs-item-name { background-color: #FFF; border-color: #aaa; }
+		li.fbs-selected .fbs-item-name {border-color: #000; color: #000;}
+		
+		.history-container { position: absolute; top: 50px; left: 124px; background-color: rgba(255,255,255,0.98); border: 1px solid #aaa; z-index: 100; display: none;}
+		.history-container .bar, .history-container .bar:hover {cursor: default;}
+		.history-container .close { }
+		
 		
 	</style>
 
 </head>
 <body>
 	<div id="top_nav">
+		<!--
 		<a href="#" id="linkViewLink" onclick="linkView();return false;" alt="Browse thtough entries">Navigate</a>
 		<a href="#" id="categoryViewLink" onclick="categoryView();">Category Structure</a>
-		<a href="#" id="articleViewLink" onclick="articleView();">Show Article</a>
+		-->
+		<a href="#" id="navigate-view" class="tab">Browse</a>
+
+		<a href="#" id="history-view" >History</a>
+
+		<a href="#" id="article-view" >Show Article</a>
+		
+		<a href="#">[Visualization of semantic relevance between hyperlinked Wikipedia entries.]</a> 
+		<!--
+		<a href="" id="setting_link">Link to this setting</a>
+
 		<a href="#" onclick="$('#help').show();return false;">About</a>
-<!--		<a href="#" id="historyViewLink" onclick="historyView();">History</a>
-		<a href="#" onclick="switchColors();">Switch Colors</a>
-		<a href="#" onclick="$('#help').show();return false;">About</a>
-		<a href="http://sepans.com/sp/works/wikistalker" target="_new" >More Info</a>
-		<span style="margin-left: 40px;">If text is not readable use SVG fonts. This may slow down rendering. <a href="#" class="toggle-font" style="text-decoration: underline;" onclick="toggleBrowseFont();return false;">SVG Font!</a> </span>-->
-		<!--<a href="#" onclick="$('#canvas1').width(600);$('#canvas1').height(500);getWikiArticle(articleId);return false; ">Side By Side</a>-->
+		-->
+
 	</div>
 	<div class="top">
 		<div class="disabling" id="top-disabler" style="display:none"></div>
 		<h1>Wikistalker</h1>
 		<section>
-			<label for="title">Artile Title: </label><input id="article" type="text" size="30" value="Tower of Babel"/> <input type="button" class="btn" onclick="changeArticle($('#article').val())" value="Go!"></input>
+			<label for="title">Artile Title: </label><input id="article" type="text" size="30" value="Jorge Luis Borges"/> <input type="button" class="btn" id="go-button" value="Go!"></input>
 		</section>
 		<section>
-			Link Filter: <span id="rel-val" >50%</span> relevant <div id="rel-slider" class="slider"> </div>
+			Relevance cut off: <span id="rel-val" >50%</span>  <div id="rel-slider" class="slider"> </div>
 		</section>
 		<section>
-			<div><label>Sort By:</lable> 
-					<label for="relatedness">Relatedness </label><input type="radio" name="sort" id="relatedness" class="radio" onclick="sortMethod('relatedness');"/>
-					<label for="title">Title </label><input type="radio" name="sort" id="title" class="radio" onclick="showTip(getTipMessage('nav'));;sortMethod('title');" checked="true"/>
+			<div><label>Sort By:</lable> <br>
+					<label for="relatedness">Relatedness </label><input type="radio" name="sort" value="relatedness" class="radio" />
+					<label for="title">Title </label><input type="radio" name="sort" value="title" class="radio"  checked="true"/>
 			</div>
-		</section>
-		<section>
-				<a href="" id="setting_link">Link to this setting</a>
 		</section>
 	</div>
 	<div id="tip">
@@ -126,24 +172,18 @@ padding: 10px;}
 		</div>
 	</div>
 	<div id="center"></div>
-	<!--<div id="loading"><img src="/images/loading.gif" alt="loading..."/></div>-->
-	<input type="hidden" id="rel-cache" value="0.5"/>
-	<input type="hidden" id="sort-cache" value="title"/>
-	<!--
-	<span id="canvas_span"><canvas id="canvas1" width="1100" height="1000"></canvas></span>
 	
-	<div id="history_canvas">
-			<a class="right" href="#" onclick="$('#history_canvas').hide();grayOut(false);linkView();return false;">close</a>
+	<div id="loading">
+	    <img src="img/loading.gif">
+	</div>
+	<div id="small-loading">
+	    <img src="img/loading.gif">
+	</div>
 
-	</div>
-	-->
-	<div id="wiki_content">
-		<a class="right" href="#" onclick="$('#wiki_content').hide();grayOut(false);linkView();return false;">close</a>
-		<h2 id="article_header"></h2>
-		<div id="wiki_text">
-			<img src="/images/loading.gif"/>
-		</div>
-	</div>
+	<input type="hidden" id="article-id" value="15781"/>
+
+
+
 	<div id="help">
 		<a href="#" style="float: right" onclick="$('#help').hide();">close this!</a>
 		<h2>About Wikistalker</h2>
@@ -157,18 +197,39 @@ padding: 10px;}
 		<p><b>Circles</b> on the end of the links are for articles that are mutually linked.</p>
 	</div>
 	
-	<span class="power">By <a href="http://sepans.com" target="_new">Sepand</a> Powered by <a href="http://wikipedia-miner.cms.waikato.ac.nz/" target="_new">Wikipedia Miner</a></span>
+	<span class="power">By <a href="http://sepans.com" target="_new">sepans</a> and <a href="http://raschin.com" target="_new">raschin</a> Powered by <a href="http://wikipedia-miner.cms.waikato.ac.nz/" target="_new">Wikipedia Miner</a></span>
 
     <div id="d3"></div>
-    <div id="d4"></div>
+
+    
+    <div id="wiki_content"><a href="#" class="close">X</a><div class="wiki"></div></div>
     
 	<script type="text/javascript">
 	
 	
 	$(document).ready(function() { 
-        console.log('read');
+
+
+        var wikistalker = new Wikistalker({title:'borges', container: '#d3', width: 800, height: 800, innerCircleR: 160});  
+
     
-        var wikistalker = new Wikistalker({title:'borges', container: '#d3', width: 900, height: 900, innerCircleR: 150});  
+        $('#article').suggest({zIndex: 400, animate: true, xhr_delay : 500, callback: 'suggestCallback' });
+        
+        $('#article').change(function() {
+            setTimeout(function() {
+                $('.small-svg').hide();
+                $('.preview').hide();
+                console.log($('#article').val().replace(/\ /g,'%2B'));
+                wikistalker.changeArticle(null,$('#article').val().replace(/\ /g,'%2B'));
+            },200);
+
+        });
+        
+        $('#wiki_content .close').click(function() {
+            $('#wiki_content').slideUp();
+            return false;
+        });
+        
 
 
     //   var wikistalker2 = new Wikistalker({title:'tehran', container: '#d4'});  
@@ -178,14 +239,74 @@ padding: 10px;}
             wikistalker.changeRelevanceCutoff(0.6);
        },5000);
     */
+        
+        $('#history-view').click(function() {
+            wikistalker.makeHistory();
+            $('.history-container').show();
+            $(this).addClass('tab');
+            $('#navigate-view').removeClass('tab');
+            
+        
+        });
+
+        $('#navigate-view').click(function() {
+            
+            $('.history-container').hide();
+            $(this).addClass('tab');
+            $('#history-view').removeClass('tab');
+        
+        });
     
-        $("#rel-slider" ).slider({max: 100, value: 50,min: 1,
+        $("#rel-slider" ).slider({max: 100, value: 50,min: 1, range: "max",
             slide: function(event, ui) {
                 
                 wikistalker.changeRelevanceCutoff(ui.value/100);
+                $('#rel-val').text(ui.value+'%');
            }
         });
+        
+        $('#go-button').click(function() {
+            wikistalker.changeArticle(null,$('#article').val().replace(/\ /g,'%2B'));
+        });
+        $('.radio').click(function() {
+
+              wikistalker.changeSortMethod($(this).val());
+        });
+        
+        $('#article-view').click(function() {
+            var id = $('#article-id').val();
+            var url = '/proxy.php?proxy_url='+'http://en.wikipedia.org/w/api.php?action=query%26prop=revisions%26rvprop=content%26format=json%26pageids='+id;
+            console.log(url);
+            $('#wiki_content .wiki').html('');
+            $('#wiki_content').show();
+            $('#wiki_content .wiki').hide();
+            $.getJSON(url, function(data) {
+                
+                var content = data.query.pages[id].revisions[0]['*'];
+                var htmlOutput = content.wiki2html();
+				var regex = /\{\{([^}]+)\}\}/g;
+				//console.log( htmlOutput.replace(regex, ''));
+
+
+				htmlOutput = htmlOutput.replace(regex, '');
+				htmlOutput = htmlOutput.replace(/\|/g,'* ');
+
+                $('#wiki_content .wiki').html(htmlOutput);
+
+                $('#wiki_content .wiki a').click(function() {return false;});
+                
+                $('#wiki_content .wiki').slideDown();
+                
+
+            });
+        });
+
     });
+    
+    
+    
+    
+    
 
 
 

@@ -7,19 +7,20 @@
  
 function SunDrawer(data,svg,rayClickCallback,args) {
 
-	var _defaults = { width: 600, height: 600, innerCircleR: 100, barMaxSize : 200, showText: 'true'};
-	_args = {};
+	var _sddefaults = { width: 600, height: 600, innerCircleR: 100, barMaxSize : 200, showText: 'true'};
+	_sdargs = {};
+	
 	
 	var _sddata = data;
 	var _sdsvg= svg;
 
 	if(args!=undefined) {
-        for(key in _defaults) {
-             _args[key] = args[key] || _defaults[key];
+        for(key in _sddefaults) {
+             _sdargs[key] = args[key] || _sddefaults[key];
         }
     }
     else {
-        _args = _defaults;
+        _sdargs = _defaults;
     }
     
     
@@ -29,14 +30,14 @@ function SunDrawer(data,svg,rayClickCallback,args) {
     
             console.log('dts');
 
-            var width = _args.width;
-            var height = _args.height;
+            var width = _sdargs.width;
+            var height = _sdargs.height;
 
             var dataSize = data.length;
             
             console.log('datasize '+dataSize);
         
-            var innerCircleR = _args.innerCircleR;	 
+            var innerCircleR = _sdargs.innerCircleR;	 
             var barWidth = Math.min(2*Math.PI*innerCircleR/dataSize,80); 
             
         
@@ -44,9 +45,11 @@ function SunDrawer(data,svg,rayClickCallback,args) {
         
             var thetaD = 360/dataSize;
         
-            var barMaxSize = _args.barMaxSize;
+            var barMaxSize = _sdargs.barMaxSize;
         
           //  var fontSize = dataSize 
+          
+            
 
         
             _sdsvg.selectAll(".bar").remove();
@@ -82,13 +85,13 @@ function SunDrawer(data,svg,rayClickCallback,args) {
                   .attr("class", "text")
                   .attr('y',-barWidth*0.15)
                   .attr('x',innerCircleR*2)
-                  .style('fill-opacity', (_args.showText=='true' && barWidth>6) ? (barWidth-6)/4 : 0 )
+                  .style('fill-opacity', (_sdargs.showText=='true' && barWidth>7) ? (barWidth-7)/4 : 0 )
                   //.style('background','#555')
         //              .attr("width", barWidth*0.9)
         //              .attr("height", function(d) { return d.relatedness*barMaxSize; })
                   .attr("width", "100%")
                   .attr("height", "100%")
-                  .attr("font-size", Math.max(Math.min(barWidth*0.8,36),12))
+                  .attr("font-size", Math.max(Math.min(barWidth*0.8,18),12))
 
                 //  .attr("height", function(d,index) { return (index>dataSize/4 && index<3*dataSize/4) ? 0 : 100-d.relatedness*100; })
                //  .attr('x',function(d,index) {  return (index>dataSize/4 && index<3*dataSize/4) ? innerCircleR*2 : -innerCircleR*2-d.title.length*5.4; })
@@ -107,15 +110,14 @@ function SunDrawer(data,svg,rayClickCallback,args) {
 function Wikistalker(args){
 	
 	var _defaults = {title: 'wikipedia', container: 'body' , width: 600, height: 600,
-	             relevance_cutoff : .5, innerCircleR: 100, barMaxSize : 200};
+	             relevance_cutoff : .5, innerCircleR: 100, barMaxSize : 200, sortMethod: 'title'};
 	
 	 _args = {};
 	
-	var _wikidata_cache , _wikidata_reserve;
+	var _wikidata_cache;
 	
-	var _svg;
+	var _svg,_smallsvg,historysvg;
 	
-	var _smallsvg;
 
 	var _title_container,_desc_container,_preview_container;
 	
@@ -134,7 +136,7 @@ function Wikistalker(args){
 	var width = _args.width;
 	var height = _args.height;
 	
-	var history = [];
+	var nav_history = [];
 	
 
 	
@@ -144,11 +146,18 @@ function Wikistalker(args){
         
 	};
 	
-	var openEntry = function(id,title) {
+	var openEntry = this.openEntry = function(id,title) {
 	    var url = id!=undefined ? URL_BY_ID_JSON+id : URL_BY_TERM_JSON+title;
+		$('#loading').fadeIn();
 		$.getJSON(url, function(data) {
+		    console.log('data');
+		    console.log(data);
 		    _wikidata_cache = data;
+		    
+		    nav_history.push(data);
 		    createVis(data);
+		    
+		    $('#loading').fadeOut();
 		});
 
 	}
@@ -157,7 +166,7 @@ function Wikistalker(args){
 	    
 	    var ret = [];
 	    for(var i=0;i<data.length;i++) {
-	        if(data[i].relatedness>relatedness) {
+	        if(data[i].relatedness>relatedness && data[i].relatedness!=1) {
 	            ret.push(data[i]);
 	        }
 	    }
@@ -183,6 +192,24 @@ function Wikistalker(args){
                         .attr("width", 500)
                         .attr("height",500);
 
+                 _historysvg = d3.select(_args.container).append("div")
+                        .attr("class", "history-container")
+                        .append('svg')
+                        .attr("width", 800)
+                        .attr("height",700);
+                
+                $('.history-container').append('<a href="#" class="close">x</a>');
+                
+                $('.history-container .close').click(function() {
+                    $('.history-container').hide();
+                    $('#navigate-view').addClass('tab');
+                    $('#history-view').removeClass('tab');
+
+                   
+
+                    return false;
+                });
+
                 $(main_container).append('<div class="title"></div>');
                 $(main_container).append('<div class="desc"></div>');
 
@@ -202,33 +229,76 @@ function Wikistalker(args){
                 $(_desc_container).css('left',width/2 - innerCircleR*0.7);
                 $(_desc_container).css('top',height/2  - innerCircleR*0.3);
                 $(_desc_container).css('width', innerCircleR*1.5);
-                $(_desc_container).css('height', innerCircleR*1.5);
+                $(_desc_container).css('max-height', innerCircleR*1.5);
                 $(_desc_container).css('overflow', 'hidden');
                 
                 $(_preview_container).css('position','absolute');
-                $(_preview_container).css('width','145px');
+                $(_preview_container).css('width','160px');
                 $(_preview_container).css('height','85px');
-                $(_preview_container).css('background-color','rgba(255,255,255,0.4)');
+               // $(_preview_container).css('background-color','rgba(255,255,255,0.4)');
                 $(_preview_container).css('overflow', 'hidden');
                 $(_preview_container).css('display','none');
+                $(_preview_container).css('text-align','justify');
                 
                     
             }
 	
 	}
+
+	var drawHistory = this.drawHistory = function() {
+	    console.log(nav_history.length);
+	    
+	    _historysvg.selectAll('g').remove();
+	    
+	    for(var i=0;i<nav_history.length;i++) {
+	        console.log('apending');
+	        var historyElement = _historysvg.append('g')
+	           .attr('transform','translate('+((i%4)*200)+','+(Math.floor(i/4)*200)+')')
+	           .attr('class','history-element')
+	           .attr('fill','#FFF')
+	           .attr('fill-opacity','0.9')
+	           .attr("width", 200)
+               .attr("height",200);
+                  
+            historyElement.append('text')
+	           .attr("x", 20)
+               .attr("y",20)
+	           .attr('fill','#000')
+	           .attr('font-size','12px')
+               .text(i+'. '+nav_history[i].title);
+               
+               var hisSorted = sortJson(nav_history[i],SORT_METHOD_TITLE);
+               hisSorted = relCutoff(hisSorted,0.5);
+               
+               new SunDrawer(hisSorted,historyElement,null,{width: 200, height: 200, innerCircleR : 30,barMaxSize: 50, showText: 'false'});
+
+	        
+	    
+	    }
+	    
+	    
+	}
 	
 	var createVis = this.createVis = function(wikidata) {
 
-		    if(wikidata==undefined) 
+		    if(wikidata==undefined)  {
 		        wikidata = _wikidata_cache;
+		    }
 		    
+		    console.log('wikidata');
 		    console.log(wikidata);
 		        
 		    var description = wikidata.definition;
 		    var title = wikidata.title;
 		    
-		    sorted = sortJson(wikidata,SORT_METHOD_TITLE);
-		    
+		    var sorted = sortJson(wikidata,_args.sortMethod);
+
+/*
+            console.log('sorted links before cuttoff');      
+            console.log(sorted);      
+            console.log('****** co '+_args.relevance_cutoff);
+            console.log(_args);
+*/		    
 		    sorted= relCutoff(sorted,_args.relevance_cutoff);
 		   
 
@@ -237,7 +307,6 @@ function Wikistalker(args){
             
              initializeContainers(_args.container);    
             
-            console.log(_svg);      
   
             
             $(_title_container).text(title);
@@ -270,15 +339,19 @@ function Wikistalker(args){
 	    
 	    console.log('preview');
 	    
-	    var r = 65;
+	    //var r = 65;
 	    
-	    var x = width/2-(_args.innerCircleR+item.relatedness*_args.barMaxSize+r)*Math.cos(theta*index);
-	    var y = height/2+(_args.innerCircleR+item.relatedness*_args.barMaxSize+r)*Math.sin(theta*index);
+	    //var x = width/2-(_args.innerCircleR+item.relatedness*_args.barMaxSize+r)*Math.cos(theta*index);
+	   // var y = height/2+(_args.innerCircleR+item.relatedness*_args.barMaxSize+r)*Math.sin(theta*index);
 	    
 	    var url = URL_BY_ID_JSON+item.id;
+	    
+	    $('#small-loading').fadeIn();
+	    
         $.getJSON(url, function(data) {
+            
+              $('#small-loading').fadeOut();
            
-           _wikidata_reserve = data;
            
            //console.log(data);
             
@@ -286,19 +359,56 @@ function Wikistalker(args){
            newsorted = relCutoff(newsorted,0.5);
            
            //console.log(newsorted);
+           var small_width = 500;
+           var small_height = 500;
 
-  	      new SunDrawer(newsorted,_smallsvg,null,{width: 500, height: 500, innerCircleR : 50, barMaxSize: 50, showText: 'false'});
+  	      new SunDrawer(newsorted,_smallsvg,null,{width: small_width, height: small_height, innerCircleR : 50, barMaxSize: 50, showText: 'false'});
 
 // 	      new SunDrawer(sorted,_smallsvg,previewEntry,{width: 200, height: 200, innerCircleR : 50,barMaxSize: 50});
   	      
+
+  	      console.log('_args.height/2');
+  	      console.log(_args.height/2);
+  	      
   	      $('.small-svg').css('position','absolute');
-  	      $('.small-svg').css('top',200);
-  	      $('.small-svg').css('left',650);
+  	      $('.small-svg').css('top',_args.height/2-small_height/2);
+  	      $('.small-svg').css('left',_args.width-small_width/2+50);
 
            $(_preview_container).html('<p>'+data.definition+'</p>');
-  	      $(_preview_container).css('top',550);
-  	      $(_preview_container).css('left',850);
+  	      $(_preview_container).css('top',_args.height/2+120);
+  	      $(_preview_container).css('left',_args.width-28);
+  	    //  $(_preview_container).css('top',550);
+  	     // $(_preview_container).css('left',835);
   	      $(_preview_container).show();
+  	      
+  	      $('.small-svg').show();
+
+  	      
+  	      $(_preview_container).unbind('click');
+
+           $(_preview_container).click(function(d,index) {
+                $(_preview_container).hide();
+  	           // $('.small-svg').animate({'left',300});
+  	             $('.small-svg').animate({
+                    left: '140',
+                  }, 200, function() {
+                        // Animation complete.
+                     //  openEntry(item.id);
+                     createVis(data);
+                     _wikidata_cache = data;
+                     
+                     nav_history.push(data);
+                     
+                     $('#article').val(data.title)
+                     $('#article-id').val(data.id)
+                     $('.small-svg').fadeOut(100);
+                     
+                     console.log(nav_history);
+                       
+                    
+
+                  });
+	        });
 
 /*
            $(_preview_container).html('<p>'+data.definition+'</p>');
@@ -317,64 +427,6 @@ function Wikistalker(args){
 	    
 	   
 
-	
-	/*
-
-	    _svg.selectAll('circle').remove();
-
-
-        $(_preview_container).hide();
-
-	    _svg.append('circle')
-	        .attr('class','preview-circle')
-	        .attr('cx',x)
-	        .style('stroke','#000')
-	        .style('stroke-opacity',0.5)
-	        .style('fill','#FFF')
-	        .style('fill-opacity',0.5)
-	        .attr('cy',y)
-	        .attr('r',r)
-	        .on('click',function(d,index) {
-                $(_preview_container).hide();
-        	    _svg.selectAll('circle').remove();
-	            openEntry(item.id);
-	        });
-
-	    _svg.append('circle')
-	        .attr('class','preview-circle')
-	        .attr('cx',x+40)
-	        .style('stroke','#000')
-	        .style('stroke-opacity',0.5)
-	        .style('fill','#FFF')
-	        .style('fill-opacity',0.5)
-	        .attr('cy',y)
-	        .attr('r',r)
-	        .on('click',function(d,index) {
-                $(_preview_container).hide();
-        	    _svg.selectAll('circle').remove();
-	            openEntry(item.id);
-	        });
-	        
-	       
-        var url = URL_BY_ID_JSON+item.id;
-        $.getJSON(url, function(data) {
-           // _wikidata_cache = data;
-           // createVis(data);
-           _wikidata_reserve = data;
-           //console.log(data);
-           $(_preview_container).html('<p>'+data.definition+'</p>');
-           $(_preview_container).css('top',y-40);
-           $(_preview_container).css('left',x-50);
-           $(_preview_container).show();
-           $(_preview_container).click(function(d,index) {
-                $(_preview_container).hide();
-        	    _svg.selectAll('circle').remove();
-	            openEntry(item.id);
-	        });
-           
-        });
-
-    */
 	}
 	
 	
@@ -383,21 +435,31 @@ function Wikistalker(args){
 };
 
 	Wikistalker.prototype.changeRelevanceCutoff = function(cutoff) {
-	    console.log(this);
-	    console.log(_args);
-
 	    _args.relevance_cutoff=cutoff;
 	    this.createVis();
+	}
+
+	Wikistalker.prototype.changeArticle = function(id,title) {
+
+	    this.openEntry(id,title);
+	}
+
+	Wikistalker.prototype.changeSortMethod = function(method) {
+
+	    _args.sortMethod=method;
+	    this.createVis();
+	}
+	
+	Wikistalker.prototype.makeHistory = function() {
+	
+	    this.drawHistory();
+
+	    
 	}
 	
 	
 	
 	
 	
-	function WikiVis(args){
-	
-	
-	
-	};
 
 
