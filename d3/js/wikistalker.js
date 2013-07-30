@@ -35,7 +35,6 @@ function SunDrawer(data,svg,rayClickCallback,args) {
 
             var dataSize = data.length;
             
-            console.log('datasize '+dataSize);
         
             var innerCircleR = _sdargs.innerCircleR;	 
             var barWidth = Math.min(2*Math.PI*innerCircleR/dataSize,80); 
@@ -150,8 +149,6 @@ function Wikistalker(args){
 	    var url = id!=undefined ? URL_BY_ID_JSON+id : URL_BY_TERM_JSON+title;
 		$('#loading').fadeIn();
 		$.getJSON(url, function(data) {
-		    console.log('data');
-		    console.log(data);
 		    _wikidata_cache = data;
 		    
 		    nav_history.push(data);
@@ -163,6 +160,9 @@ function Wikistalker(args){
 	}
 	
 	var relCutoff = function(data,relatedness) {
+	
+	    if(!(relatedness>=0 && relatedness<=1))
+	        relatedness = 0.5;
 	    
 	    var ret = [];
 	    for(var i=0;i<data.length;i++) {
@@ -229,7 +229,7 @@ function Wikistalker(args){
                 $(_desc_container).css('left',width/2 - innerCircleR*0.7);
                 $(_desc_container).css('top',height/2  - innerCircleR*0.3);
                 $(_desc_container).css('width', innerCircleR*1.5);
-                $(_desc_container).css('max-height', innerCircleR*1.5);
+                $(_desc_container).css('max-height', innerCircleR*0.95);
                 $(_desc_container).css('overflow', 'hidden');
                 
                 $(_preview_container).css('position','absolute');
@@ -285,8 +285,6 @@ function Wikistalker(args){
 		        wikidata = _wikidata_cache;
 		    }
 		    
-		    console.log('wikidata');
-		    console.log(wikidata);
 		        
 		    var description = wikidata.definition;
 		    var title = wikidata.title;
