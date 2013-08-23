@@ -37,7 +37,8 @@ function SunDrawer(data,svg,rayClickCallback,args) {
             
         
             var innerCircleR = _sdargs.innerCircleR;	 
-            var barWidth = Math.min(2*Math.PI*innerCircleR/dataSize,80); 
+            var barWidth = Math.max(Math.min(2*Math.PI*innerCircleR/dataSize,80),3); 
+            console.log('bar width '+barWidth);
             
         
             var theta = 2*Math.PI/dataSize;
@@ -68,13 +69,13 @@ function SunDrawer(data,svg,rayClickCallback,args) {
                    return false;
               })
         //     .attr("text-anchor", function(d,index) { return (index>dataSize/4 && index<3*dataSize/4) ? 'end': 'start';})
-              .attr("width", barWidth-1)
-              .attr("height", function(d) { return 100-d.relatedness*100; });
+              .attr("width", barWidth)
+              .attr("height", function(d) { return barMaxSize-d.relatedness*100; });
           
 
             bars.append("rect")
               .attr("class", ".bar-itself")
-              .attr("width", barWidth-1)
+              .attr("width", barWidth-2)
               .attr('x',0)
               .attr('y',innerCircleR*2)
               .attr("height", function(d) { return d.relatedness*barMaxSize; });
@@ -115,7 +116,7 @@ function Wikistalker(args){
 	
 	var _wikidata_cache;
 	
-	var _svg,_smallsvg,historysvg;
+	var _svg,_smallsvg,historysvg,_cat_g,_the_svg;
 	
 
 	var _title_container,_desc_container,_preview_container;
@@ -181,18 +182,41 @@ function Wikistalker(args){
 
 	    
 	     if(_svg==undefined) {
-                console.log(_args.container);
-                 _svg = d3.select(_args.container).append("svg")
+	            _the_svg = d3.select(_args.container).append("svg")
+                        .attr("class", "the-main-svg")
+                        .attr("x",0)
+                        .attr("y",0)
+                        .attr("width", 1400)
+                        .attr("height",880);
+                        
+
+                //console.log(_args.container);
+                
+                 _svg = _the_svg.append("g")
                         .attr("class", "main-svg")
+                        .attr("x",0)
+                        .attr("y",0)
                         .attr("width", width)
                         .attr("height",height);
+                        
+                  // tedundant
+                  var small_width = 500;
+                  var small_height = 500;
 
-                 _smallsvg = d3.select(_args.container).append("svg")
+                 _cat_g = _the_svg.append("g")
+                        .attr("class", "cat-svg")
+                        .attr("width", width)
+                        .attr("height",100)
+                        .attr("transform", "translate("+(100)+","+40+")");
+
+                 _smallsvg = _the_svg.append("g")
                         .attr("class", "small-svg")
                         .attr("width", 500)
-                        .attr("height",500);
+                        .attr("height",500)
+                        .attr("transform", "translate("+(_args.width-small_width/2+50)+","+(_args.height/2-small_height/2)+")");
+  	                   // .attr("y",_args.width-small_width/2+50);
 
-                 _historysvg = d3.select(_args.container).append("div")
+                 _historysvg =  d3.select(_args.container).append("div")
                         .attr("class", "history-container")
                         .append('svg')
                         .attr("width", 800)
@@ -279,6 +303,144 @@ function Wikistalker(args){
 	    
 	}
 	
+	var drawCategories = function(wikidata){
+	    
+	     _cat_g.selectAll(".cat").remove();
+	   
+	    var cats = _cat_g.selectAll(".cat")
+               .data(wikidata.parentCategories)
+               .enter().append("text")
+               .attr("class","cat")
+               .attr('fill','#aaa')
+               .attr('stroke','none')
+               .attr("width",200)
+               .attr("height",20)
+              // .attr("y",function(d,index) {return (2*(_args.innerCircleR+_args.barMaxSize-20)/wikidata.parentCategories.length)*(index+1);})
+               .attr("transform",function (d,index) { return "translate("+(_args.width+100)+","+(((_args.width-150)/wikidata.parentCategories.length)*(index+1))+") rotate(0)";})
+               .attr("id",function(d) {return "cat_"+d.id;})
+               .text(function(d) {return ''+d.title;});
+
+	     _cat_g.selectAll(".main_curve").remove();
+
+	    var main_curves = _cat_g.selectAll(".main_curve")
+               .data(wikidata.parentCategories)
+               .enter().append("path")
+                    .attr('class','main_curve')
+                  /*
+                    .attr('x1',850)
+                    .attr('y1',400)
+                    .attr('x2',ty)
+                    .attr('y2',850)
+                */
+                    .attr('d',function(d,index) {
+                        dsx = 500;
+                        dsy = 300+index*5;
+
+                        var translate = $($('.cat')[index]).attr("transform");
+                        var tx= translate.match(/translate\((\d+[\.\d+]*),(\d+[\.\d+]*)/)[2];//new RegExp("transform\(\d\,(\d\.\d+)\)").exec(translate);
+                        
+
+                        dtx = 890;//parseFloat(ty);
+                        dty = tx;
+                        var ydisp = dty;
+                        return "M " + (dsx) + "," + (dsy) + " C "+dsx+","+dsy+"  "+( dtx-300 )+ "," +( ydisp) +" "+ dtx + "," + dty;
+
+
+                    })
+                    .attr('fill','none')
+                    .attr('stroke','#999');
+
+/*
+      var cats = _cat_g.selectAll(".cat")
+              .data(wikidata.parentCategories)
+               .enter().append('foreignObject')
+          //     .attr("y",function(d,index) {return (_args.width/wikidata.parentCategories.length)*index;})
+               .append("div")
+               .attr("xmlns","http://www.w3.org/1999/xhtml")
+               .attr("class","cat")
+        //       .attr("width",200)
+         //      .attr("height",20)
+               .attr("css",function(d,index) {return "top: "+(_args.width/wikidata.parentCategories.length)*index+"px; left: 0px";})
+        //       .attr("left",function(d,index) {return 500;})
+//               .attr("transform","rotate(270)")
+               .attr("id",function(d) {return "cat_"+d.id;})
+               .text(function(d) {return d.title;});
+   
+*/   
+ 	
+	}
+	
+	
+	var drawPreviewCategories = function(wikidata){
+	
+        _the_svg.selectAll('.connect-g').remove();
+	    
+	    var connect_g = _the_svg.append("g")
+                        .attr("class", "connect-g")
+                        .attr("width", 1000)
+                        .attr("height",1000);
+        
+        
+        for(var i=0;i<wikidata.parentCategories.length;i++) {
+        
+             var cat = wikidata.parentCategories[i]; 
+             if($('#cat_'+cat.id).length>0) {
+                
+                var translate = $('#cat_'+cat.id).attr("transform");
+                var tx= translate.match(/translate\((\d+[\.\d+]*),(\d+[\.\d+]*)/)[2];//new RegExp("transform\(\d\,(\d\.\d+)\)").exec(translate);
+                console.log(tx);
+            
+                connect_g.append("path")
+                    .attr('class','cat-line')
+                  /*
+                    .attr('x1',850)
+                    .attr('y1',400)
+                    .attr('x2',ty)
+                    .attr('y2',850)
+                */
+                    .attr('d',function() {
+                        console.log('d fun');
+                        dsx = 850;
+                        dsy = 400;
+                        
+
+                        dtx = 990;//parseFloat(ty);
+                        dty = parseFloat(tx)+35;
+                        //var dx = dtx - dsx,
+                        //dy = dty - dsy,
+                        //dr = Math.sqrt(dx * dx + dy * dy);
+                        
+                       var ydisp = dty;
+
+                       // return "M " + dsx + "," + dsy + " C 850,400  "+( dtx+200 )+ "," +( dty-200) +" "+ dtx + "," + dty;
+                       // return "M " + (dsx) + "," + (dsy) + " C "+dsx+","+dsy+"  "+( dtx+300 )+ "," +( dty-300) +" "+ dtx + "," + dty;
+                       return "M " + (dsx) + "," + (dsy) + " C "+dsx+","+dsy+"  "+( dtx-30 )+ "," +( ydisp) +" "+ dtx + "," + dty;
+
+
+                    })
+                    .attr('fill','none')
+                    .attr('stroke','#555');
+                    
+             }
+        
+        }
+	    
+	    /*
+	    var cats = _cat_g.selectAll(".cat")
+               .data(wikidata.parentCategories)
+               .enter().append("text")
+               .attr("class","cat")
+               .attr("width",200)
+               .attr("height",20)
+               .attr("y",function(d,index) {return (_args.width/wikidata.parentCategories.length*(index+1))+10;})
+               .attr("transform","rotate(270)")
+               .attr("id",function(d) {return "cat_"+d.id;})
+        */
+  
+ 	
+	}
+	
+	
 	var createVis = this.createVis = function(wikidata) {
 
 		    if(wikidata==undefined)  {
@@ -310,14 +472,17 @@ function Wikistalker(args){
             $(_title_container).text(title);
             $(_desc_container).html(description);
             
+            drawCategories(wikidata);
             
             new SunDrawer(sorted,_svg,previewEntry,{width: _args.width, height: _args.height, innerCircleR : _args.innerCircleR});
+            
             
             
             
 
 	}
 	
+
 
 	
 	
@@ -359,24 +524,18 @@ function Wikistalker(args){
            //console.log(newsorted);
            var small_width = 500;
            var small_height = 500;
+           
+           
+           drawPreviewCategories(data);
 
   	      new SunDrawer(newsorted,_smallsvg,null,{width: small_width, height: small_height, innerCircleR : 50, barMaxSize: 50, showText: 'false'});
 
 // 	      new SunDrawer(sorted,_smallsvg,previewEntry,{width: 200, height: 200, innerCircleR : 50,barMaxSize: 50});
   	      
 
-  	      console.log('_args.height/2');
-  	      console.log(_args.height/2);
-  	      
-  	      $('.small-svg').css('position','absolute');
-  	      $('.small-svg').css('top',_args.height/2-small_height/2);
-  	      $('.small-svg').css('left',_args.width-small_width/2+50);
-
            $(_preview_container).html('<p>'+data.definition+'</p>');
   	      $(_preview_container).css('top',_args.height/2+120);
   	      $(_preview_container).css('left',_args.width-28);
-  	    //  $(_preview_container).css('top',550);
-  	     // $(_preview_container).css('left',835);
   	      $(_preview_container).show();
   	      
   	      $('.small-svg').show();
@@ -386,16 +545,21 @@ function Wikistalker(args){
 
            $(_preview_container).click(function(d,index) {
                 $(_preview_container).hide();
-  	           // $('.small-svg').animate({'left',300});
   	             $('.small-svg').animate({
                     left: '140',
-                  }, 200, function() {
-                        // Animation complete.
-                     //  openEntry(item.id);
+                  }, 300, function() {
+
+
+                     _cat_g.selectAll(".cat").remove();
+            	     _cat_g.selectAll(".main_curve").remove();
+                    _the_svg.selectAll('.connect-g').remove();
+
                      createVis(data);
                      _wikidata_cache = data;
                      
                      nav_history.push(data);
+                     
+
                      
                      $('#article').val(data.title)
                      $('#article-id').val(data.id)

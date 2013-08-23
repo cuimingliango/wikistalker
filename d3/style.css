@@ -1,12 +1,12 @@
 	body{ font-family: arial,sans-serif;; font-size: 11px; margin: 10px; overflow-y: hidden;}
-		.slider { width: 180px; margin: 5px 0 }
+		.slider { width: 180px; margin: 5px 0; }
 		.ui-slider-range { background-color: #ccc;
         /*  background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.3) 3px, rgba(255,255,255,.3) 13px);*/
 		}
 		
 		#params { padding: 20px 0 0 350px;}
 		#canvas_span {position: absolute;}
-		.top {z-index: 100; position: absolute;   padding: 8px; width: 187px; border: 1px solid #000;}
+		.top {z-index: 100; position: absolute;   padding: 4px; width: 187px; border: 1px solid #000;}
 		.top input {margin-top: 3px;}
 		.top section { margin: 8px 0; display: block;}
 		#article {border: 1px solid #666; height: 25px; width: 150px; padding: 3px; margin-bottom: 5px;}
@@ -21,10 +21,10 @@
 		#center {z-index: 100; position: absolute; top: 420px; left: 450px;}
 		.top_nav {z-index: 100; position: absolute; top: 380; left: 480; width: 200px;}
 		
-		#loading {z-index: 200; position: absolute; top: 350px; left: 380px; width: 250px; height: 100px; background-color: rgba(255,255,255,0.6); }
+		#loading {z-index: 200; position: absolute; top: 350px; left: 350px; width: 250px; height: 100px; background-color: rgba(255,255,255,0.6); }
 		#loading img { margin: 20px auto; display: block;}
 
-		#small-loading {z-index: 200; position: absolute; top: 520px; left: 870px; width: 200px; height: 90px; background-color: rgba(255,255,255,0.6); display:none; }
+		#small-loading {z-index: 200; position: absolute; top: 520px; left: 830px; width: 200px; height: 90px; background-color: rgba(255,255,255,0.6); display:none; }
 		#small-loading img { margin: 20px auto; display: block;}
 		
 		#define-menu img {margin: 20px 80px; z-index: 90;}
@@ -64,17 +64,17 @@ padding: 10px;}
 		#rel-slider { border-radius: 0px; border: 1px solid black; height: 10px; }
 		#rel-slider a { border-radius: 1px; border: 1px solid black; background: #000;}
 		
-		#d3 { position: absolute; top: 0px; left: 100px;}
+		#d3 { position: absolute; top: 0px; left: 60px;}
 
 
 		.small-svg .bar, .small-svg .bar:hover  { cursor: default;}
 
 
 		.bar rect { fill: #111;}
-		.bar:hover rect { fill: #bbb; width: 10px;}
+		.bar:hover rect { fill: #ddd; width: 10px;}
 		
 		.bar:hover {width: 10px; cursor: pointer;}
-		.bar text { fill: #ccc; fill-opacity: 0;}
+		.bar text { fill: #ddd; fill-opacity: 0;}
 		.bar:hover .text { fill: #000;  fill-opacity: 1 !important;}
 		
 		.preview p { margin: 0; }
@@ -89,4 +89,10 @@ padding: 10px;}
 		.history-container { position: absolute; top: 50px; left: 124px; background-color: rgba(255,255,255,0.98); border: 1px solid #aaa; z-index: 100; display: none;}
 		.history-container .bar, .history-container .bar:hover {cursor: default;}
 		.history-container .close { }
+		
+		.the-main-svg { margin-bottom: 15px;}
+		
+		.cat {position: absolute;}
+		
+		.main_curve { stroke-opacity: 0.2}
 		

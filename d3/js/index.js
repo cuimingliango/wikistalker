@@ -7,7 +7,7 @@
 	    
 	    $('#rel-val').text(initRel*100+'%');
 
-	    $('#article').val(initTitle);
+	    $('#article').val(initTitle.replace(/%2B/g,' '));
 	    
 	    if(initSort=='relatedness') {
 	    
