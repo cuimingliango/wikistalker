@@ -1,7 +1,36 @@
+var spinner_opts = {
+  lines: 20, // The number of lines to draw
+  length: 17, // The length of each line
+  width: 5, // The line thickness
+  radius: 15, // The radius of the inner circle
+  corners: 0, // Corner roundness (0..1)
+  rotate: 0, // The rotation offset
+  direction: 1, // 1: clockwise, -1: counterclockwise
+  color: '#000', // #rgb or #rrggbb or array of colors
+  speed: 0.9, // Rounds per second
+  trail: 29, // Afterglow percentage
+  shadow: false, // Whether to render a shadow
+  hwaccel: false, // Whether to use hardware acceleration
+  className: 'spinner', // The CSS class to assign to the spinner
+  zIndex: 2e9, // The z-index (defaults to 2000000000)
+  top: 'auto', // Top position relative to parent in px
+  left: 'auto' // Left position relative to parent in px
+};
+
+var spinner1, spinner2;
+
+
+$(document).ready(function() { 
+
+        var target = document.getElementById('loading');
+        spinner1 = new Spinner(spinner_opts).spin(target);
+        var target2 = document.getElementById('small-loading');
+        spinner_opts.length = 12;
+        spinner_opts.radius = 9;
+        spinner_opts.width = 3;
+        spinner2 = new Spinner(spinner_opts).spin(target2);
 	
-	$(document).ready(function() { 
-	
-	    var initTitle = getURLParameter('title')!='null' ?  getURLParameter('title') : 'borges';
+	    var initTitle = getURLParameter('title')!='null' ?  getURLParameter('title') : 'Jorge%2BLuis%2BBorges';
 	    var initRel = getURLParameter('rel')!='null' ?  getURLParameter('rel') : 0.5;
 	    var initSort = getURLParameter('sort')!='null' ?  getURLParameter('sort') : 'title';
 	    
@@ -14,6 +43,8 @@
 	        $('#sort-rel').attr('checked','checked');
 	        $('#sort-title').removeAttr('checked');
 	    }
+	    
+	    $('#sortby_sec').buttonset();
 
 	    
 
@@ -107,6 +138,7 @@
 
 				htmlOutput = htmlOutput.replace(regex, '');
 				htmlOutput = htmlOutput.replace(/\|/g,'* ');
+				htmlOutput = htmlOutput.replace(/\}\}/g,'');
 
                 $('#wiki_content .wiki').html(htmlOutput);
 

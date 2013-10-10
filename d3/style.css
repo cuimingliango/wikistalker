@@ -12,7 +12,7 @@
 		#article {border: 1px solid #666; height: 25px; width: 150px; padding: 3px; margin-bottom: 5px;}
 		#rel-val {font-size: 14px; font-weight: bold;}
 		.radio {vertical-align: middle; }
-		.btn { border: 1px solid black; padding: 5px 3px; cursor: pointer; background-color: #DDD;}
+		.btn { border: 1px solid black; padding: 3px; cursor: pointer; background-color: #DDD;}
 		.btn:hover {background-color: #CCC;}
 		#tooltip {z-index: 100; position: absolute; width: 250px; background: none; max-height: 300px; overflow: hidden; 
 			/*border: 1px solid #9FBFA7;*/ }
@@ -24,8 +24,9 @@
 		#loading {z-index: 200; position: absolute; top: 350px; left: 350px; width: 250px; height: 100px; background-color: rgba(255,255,255,0.6); }
 		#loading img { margin: 20px auto; display: block;}
 
-		#small-loading {z-index: 200; position: absolute; top: 520px; left: 830px; width: 200px; height: 90px; background-color: rgba(255,255,255,0.6); display:none; }
+		#small-loading {z-index: 200; position: absolute; top: 400px; left: 910px; width: 200px; height: 90px; background-color: rgba(255,255,255,0.6); display:none; }
 		#small-loading img { margin: 20px auto; display: block;}
+		
 		
 		#define-menu img {margin: 20px 80px; z-index: 90;}
 		a {color: #666;text-decoration: none;}
@@ -42,6 +43,7 @@
 		#top_nav {position: absolute; top: 10px; left: 225px; z-index: 300; background-color: #FFF; border: 1px solid #000; width: 100%; opacity: .8;
 padding: 10px;}
 		#top_nav a {color: #000; margin-right: 15px; padding: 2px 5px 10px;}
+		#top_nav .menu-center { margin: 0 140px 0 80px; padding: 0; display: inline-block;}
 		
 		.tab {border-bottom: 1px solid #FFF; border-top: 1px solid black; border-right: 1px solid black; border-left: 1px solid black;}
 		
@@ -61,8 +63,8 @@ padding: 10px;}
 		#tip {position: fixed; top: 80px; left: 270px; padding: 5px; z-index: 500; font-size: 10px; 
 			color: #444; border: 1px solid #444; width: 200px; display: none; background: #FFF; opacity: .8;}
 		#tip .message {color: #00BBBB;}
-		#rel-slider { border-radius: 0px; border: 1px solid black; height: 10px; }
-		#rel-slider a { border-radius: 1px; border: 1px solid black; background: #000;}
+		#rel-slider { border-radius: 0px; border: 1px solid black; height: 8px; }
+		#rel-slider a { border-radius: 1px; border: 1px solid black; width: 10px; height: 12px; background: #555; cursor: col-resize;}
 		
 		#d3 { position: absolute; top: 0px; left: 60px;}
 
@@ -78,15 +80,16 @@ padding: 10px;}
 		.bar:hover .text { fill: #000;  fill-opacity: 1 !important;}
 		
 		.preview p { margin: 0; }
-		.preview {background: url('img/arrow.png') 165px 4px no-repeat; padding-right: 40px; width: 180px; cursor: pointer;}
-		.preview:hover b {text-decoration: underline;}
+		.preview {/*background: url('img/arrow.png') 165px 4px no-repeat;*/ padding-right: 40px; width: 180px; cursor: pointer;}
+		.preview:hover b {color: #555;}
+		.preview:hover p {color: #444;}
 		.preview-circle { cursor: pointer;}
 		
 		.li.fbs-item { border-color: #aaa;}
 		.fbs-item-name { background-color: #FFF; border-color: #aaa; }
 		li.fbs-selected .fbs-item-name {border-color: #000; color: #000;}
 		
-		.history-container { position: absolute; top: 50px; left: 124px; background-color: rgba(255,255,255,0.98); border: 1px solid #aaa; z-index: 100; display: none;}
+		.history-container { position: absolute; top: 50px; left: 164px; background-color: rgba(255,255,255,0.98); border: 1px solid #aaa; z-index: 100; display: none;}
 		.history-container .bar, .history-container .bar:hover {cursor: default;}
 		.history-container .close { }
 		
@@ -96,3 +99,13 @@ padding: 10px;}
 		
 		.main_curve { stroke-opacity: 0.2}
 		
+		#sortby_sec { margin-top: 4px;}
+		#sortby_sec span { display: inline-block; margin-right: 3px;}
+		
+		/*toggle button*/
+		
+		.ui-corner-all, .ui-corner-bottom, .ui-corner-right, .ui-corner-left, .ui-corner-br { border-bottom-right-radius: 1px; border-bottom-left-radius: 1px; border-top-right-radius: 1px; border-top-left-radius: 1px;}
+		.ui-widget {font-family: arial; font-size: 1em;}
+		.ui-state-default, .ui-state-active { border-color: #555;}
+		.ui-state-default { color: #777;}
+		.ui-state-active { color: #333;}

@@ -5,7 +5,7 @@
  *
  */
  
-function SunDrawer(data,svg,rayClickCallback,args) {
+function SunDrawer(title,data,svg,rayClickCallback,args) {
 
 	var _sddefaults = { width: 600, height: 600, innerCircleR: 100, barMaxSize : 200, showText: 'true'};
 	_sdargs = {};
@@ -49,6 +49,7 @@ function SunDrawer(data,svg,rayClickCallback,args) {
         
           //  var fontSize = dataSize 
           
+          
             
 
         
@@ -79,6 +80,7 @@ function SunDrawer(data,svg,rayClickCallback,args) {
               .attr('x',0)
               .attr('y',innerCircleR*2)
               .attr("height", function(d) { return d.relatedness*barMaxSize; });
+
             
 
                 bars.append('text')
@@ -98,7 +100,11 @@ function SunDrawer(data,svg,rayClickCallback,args) {
                 //  .attr("transform", function(d,index) {  return (index>dataSize/4 && index<3*dataSize/4) ? 'rotate(90)' :'rotate(270)';})
                 .attr("transform", function(d,index) {  return (index>dataSize/4 && index<3*dataSize/4)? 'rotate(90)' : 'rotate(90)'})
                       
-                  .text(function(d) { return d.title;});
+                .text(function(d) { return d.title;})
+                  
+               .append("svg:title")
+              .text(function(d) { return "'"+title+"' and '"+d.title+"' are "+(Math.round(d.relatedness*100))+"% relevant"; });
+
 
     }
     
@@ -148,6 +154,8 @@ function Wikistalker(args){
 	
 	var openEntry = this.openEntry = function(id,title) {
 	    var url = id!=undefined ? URL_BY_ID_JSON+id : URL_BY_TERM_JSON+title;
+
+	//	spinner1.spin($('#loading'));
 		$('#loading').fadeIn();
 		$.getJSON(url, function(data) {
 		    _wikidata_cache = data;
@@ -156,6 +164,8 @@ function Wikistalker(args){
 		    createVis(data);
 		    
 		    $('#loading').fadeOut();
+		    spinner1.stop();
+
 		});
 
 	}
@@ -186,8 +196,8 @@ function Wikistalker(args){
                         .attr("class", "the-main-svg")
                         .attr("x",0)
                         .attr("y",0)
-                        .attr("width", 1400)
-                        .attr("height",880);
+                        .attr("width", 1200)
+                        .attr("height",720);
                         
 
                 //console.log(_args.container);
@@ -237,7 +247,7 @@ function Wikistalker(args){
                 $(main_container).append('<div class="title"></div>');
                 $(main_container).append('<div class="desc"></div>');
 
-                $(main_container).append('<div class="preview"></div>');
+                $(main_container).append('<div class="preview" title="click to navigate to the new entry!"></div>');
                 
                 _title_container = $(_args.container).find('.title');
                 _desc_container = $(_args.container).find('.desc');
@@ -294,7 +304,7 @@ function Wikistalker(args){
                var hisSorted = sortJson(nav_history[i],SORT_METHOD_TITLE);
                hisSorted = relCutoff(hisSorted,0.5);
                
-               new SunDrawer(hisSorted,historyElement,null,{width: 200, height: 200, innerCircleR : 30,barMaxSize: 50, showText: 'false'});
+               new SunDrawer(nav_history[i].title,hisSorted,historyElement,null,{width: 200, height: 200, innerCircleR : 30,barMaxSize: 50, showText: 'false'});
 
 	        
 	    
@@ -318,7 +328,9 @@ function Wikistalker(args){
               // .attr("y",function(d,index) {return (2*(_args.innerCircleR+_args.barMaxSize-20)/wikidata.parentCategories.length)*(index+1);})
                .attr("transform",function (d,index) { return "translate("+(_args.width+100)+","+(((_args.width-150)/wikidata.parentCategories.length)*(index+1))+") rotate(0)";})
                .attr("id",function(d) {return "cat_"+d.id;})
-               .text(function(d) {return ''+d.title;});
+               .text(function(d) {return ''+d.title;})
+               .append("svg:title")
+                .text(function(d) { return "'"+wikidata.title+"' belongs to the category '"+d.title+"'"; });
 
 	     _cat_g.selectAll(".main_curve").remove();
 
@@ -474,7 +486,7 @@ function Wikistalker(args){
             
             drawCategories(wikidata);
             
-            new SunDrawer(sorted,_svg,previewEntry,{width: _args.width, height: _args.height, innerCircleR : _args.innerCircleR});
+            new SunDrawer(title,sorted,_svg,previewEntry,{width: _args.width, height: _args.height, innerCircleR : _args.innerCircleR});
             
             
             
@@ -510,11 +522,13 @@ function Wikistalker(args){
 	    var url = URL_BY_ID_JSON+item.id;
 	    
 	    $('#small-loading').fadeIn();
+	//	spinner2.spin($('#small-loading'));
 	    
         $.getJSON(url, function(data) {
             
               $('#small-loading').fadeOut();
-           
+           	 // spinner2.stop();
+
            
            //console.log(data);
             
@@ -528,7 +542,7 @@ function Wikistalker(args){
            
            drawPreviewCategories(data);
 
-  	      new SunDrawer(newsorted,_smallsvg,null,{width: small_width, height: small_height, innerCircleR : 50, barMaxSize: 50, showText: 'false'});
+  	      new SunDrawer(data.title,newsorted,_smallsvg,null,{width: small_width, height: small_height, innerCircleR : 50, barMaxSize: 50, showText: 'false'});
 
 // 	      new SunDrawer(sorted,_smallsvg,previewEntry,{width: 200, height: 200, innerCircleR : 50,barMaxSize: 50});
   	      

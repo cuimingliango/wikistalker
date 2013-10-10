@@ -9,6 +9,7 @@
 	<script type="text/javascript" src="js/d3.min.js"></script>
 	<script type="text/javascript" src="js/jquery-2.0.3.min.js"></script>
 	<script type="text/javascript" src="js/jquery-ui-1.10.3.custom.min.js"></script>
+	<script type="text/javascript" src="js/spin.min.js"></script>
 	<script type="text/javascript" src="js/wiki2html.js"></script>
 	
 	<script type="text/javascript" src="http://code.jquery.com/jquery-migrate-1.0.0.js"></script>
@@ -19,7 +20,7 @@
  	<script type="text/javascript" src="js/wikistalker.js"></script>
 
 
-    <link rel="stylesheet" type="text/css" href="js/jquery-ui-1.10.3.custom.css" />
+    <link rel="stylesheet" type="text/css" href="js/jquery-ui-1.10.3.custom.min.css" />
     
     <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/freebase/suggest/4_2/suggest.min.css" />
 
@@ -44,9 +45,12 @@
 
 		<a href="#" id="article-view" >Show Article</a>
 		
-		<a href="#">[Visualization of semantic relevance between hyperlinked Wikipedia entries.]</a> 
+		<a class="menu-center" href="#" onclick="$('#help').toggle();">[Visualization of semantic relevance between hyperlinked Wikipedia articles. ]</a>
+		
 
-		<a href="#" id="link-to-this" target="_blank">Link to this <span>(for sharing)</span></a>
+		<a  href="#" id="link-to-this" target="_blank">Link to this <span>(for sharing)</span></a>
+
+		<a  href="#" onclick="$('#help').toggle();">About</a>
 
 		<!--
 		<a href="" id="setting_link">Link to this setting</a>
@@ -65,31 +69,20 @@
 			Relevance cut off: <span id="rel-val" >50%</span>  <div id="rel-slider" class="slider"> </div>
 		</section>
 		<section>
-			<div><label>Sort By:</lable> <br>
-					<label for="relatedness">Relatedness </label><input type="radio" name="sort" value="relatedness" id="sort-rel" class="radio" />
-					<label for="title">Title </label><input type="radio" name="sort" value="title" class="radio" id="sort-title" checked="true"/>
+			<div id="sortby_sec"><span>Sort By:</span>
+					<label for="sort-rel">Relatedness </label><input type="radio" name="sort" value="relatedness" id="sort-rel" class="radio" />
+					<label for="sort-title">Title </label><input type="radio" name="sort" value="title" class="radio" id="sort-title" checked="true"/>
 			</div>
 		</section>
 	</div>
-	<div id="tip">
-		Tip: <span class="message">Click on 'Navigation View' to enable controls and navigate</span>
-		<a style="float:right; border: 1px solid #666; padding: 2px;" alt="close" href="#" onclick="$('#tip').hide();">X</a>
-	</div>
-	<div id="tooltip-container">
-		<div id="tooltip"></div>
-		<div id="define-menu" class="top_nav" style="display:none">
-		
-			<a href="#" onclick="changeArticleById(hover);return false;">Navigate to Entry >></a>  <a href="#" class="right" onclick="lock=false;showTooltip(articleId, $('#center'),null);return false;">X Cancel</a>
-		
-		</div>
-	</div>
+	
 	<div id="center"></div>
 	
 	<div id="loading">
-	    <img src="img/loading.gif">
+	    <!--<img src="img/loading.gif">-->
 	</div>
 	<div id="small-loading">
-	    <img src="img/loading.gif">
+	   <!-- <img src="img/loading.gif">-->
 	</div>
 
 	<input type="hidden" id="article-id" value="15781"/>
