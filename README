@@ -1,6 +1,6 @@
+Please refer to wikistalker-d3 repo. This is the old processing.js implementation. The new version is implemented using D3.js
+
+
 Wikistalker - A Wikipedia navigation tool (and meta-structure visualizer) that allows navigation based on the semantic (and ontological) relevance of linked articles
 http://sepans.com/wikistalker 
 
-How to use the source:
-
-The d3 folder is where the active development is happening. The rest is depriciated. It needs to be cleaned up.
